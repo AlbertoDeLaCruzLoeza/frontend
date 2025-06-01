@@ -34,7 +34,7 @@ import RoleList from '../modules/roles/list/RoleList';
 import RoleForm from '../modules/roles/form/RoleForm';
 import SupplierList from '../modules/suppliers/list/SupplierList';
 import SupplierForm from '../modules/suppliers/form/SupplierForm';
-import LogList from '../modules/logs/list/LogList';
+import ActionLogList from '../modules/actionLogs/list/ActionLogList';
 
 const { Header, Content, Sider } = Layout;
 
@@ -176,7 +176,7 @@ const MainLayout = () => {
               <Route path="/suppliers/form" element={<SupplierForm />} />
               <Route path="/suppliers/edit/:id" element={<SupplierForm />} />
 
-              <Route path="/action-logs" element={<LogList />} />
+              <Route path="/action-logs" element={<ActionLogList />} />
             </Routes>
             <Outlet />
           </div>
