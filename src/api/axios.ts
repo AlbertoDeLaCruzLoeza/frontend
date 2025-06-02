@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Instancia de Axios con la base URL del backend en Render
 const instance = axios.create({
-  baseURL: 'https://alberto-back.onrender.com',
+  baseURL: 'https://back-front-1.onrender.com',
 });
 
 // Interceptor para agregar el token si existe
