@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReCAPTCHA from 'react-google-recaptcha';
 
-const siteKey = '6LckoVIrAAAAAAmv_2Z52o4hK0nMDxFSpqeIBZoO'; // ← reemplaza con tu clave del sitio de reCAPTCHA
+const siteKey = '6LckoVIrAAAAAAmv_2Z52o4hK0nMDxFSpqeIBZoO'; // tu clave pública de reCAPTCHA
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const LoginForm = () => {
 
     setLoading(true);
     try {
-      const res = await login({ ...values, recaptchaToken }); // también puedes enviar el token al backend
+      const res = await login(values); // 👈 ya no se envía recaptchaToken
       localStorage.setItem('token', res.data.token);
       message.success('Inicio de sesión exitoso');
       navigate('/');
@@ -68,7 +68,6 @@ const LoginForm = () => {
             <Input.Password />
           </Form.Item>
 
-          {/* ✅ reCAPTCHA */}
           <Form.Item>
             <ReCAPTCHA sitekey={siteKey} onChange={setRecaptchaToken} />
           </Form.Item>
