@@ -6,18 +6,29 @@ import { useNavigate } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
 
+interface Filters {
+  search: string;
+  createdStartDate: string;
+  createdEndDate: string;
+  updatedStartDate: string;
+  updatedEndDate: string;
+  isActive?: string; // o isActive: string | undefined
+  brandIds: string;
+  supplierIds: string;
+}
+
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     search: '',
     createdStartDate: '',
     createdEndDate: '',
-    updateStartDate: '',
-    updateEndDate: '',
+    updatedStartDate: '',
+    updatedEndDate: '',
     isActive: undefined,
     brandIds: '',
-    suppliersIds: ''
+    supplierIds: ''
   });
 
   const navigate = useNavigate();
@@ -75,8 +86,8 @@ const ProductList = () => {
   const handleUpdatedDateChange = (_: any, dateStrings: [string, string]) => {
     setFilters({
       ...filters,
-      updateStartDate: dateStrings[0],
-      updateEndDate: dateStrings[1],
+      updatedStartDate: dateStrings[0],
+      updatedEndDate: dateStrings[1],
     });
   };
 
@@ -89,7 +100,7 @@ const ProductList = () => {
   };
 
   const handleSupplierChange = (value: string[]) => {
-    setFilters({ ...filters, suppliersIds: value.join(',') });
+    setFilters({ ...filters, supplierIds: value.join(',') });
   };
 
   const handleSearch = () => {

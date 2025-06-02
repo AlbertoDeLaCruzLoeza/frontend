@@ -11,23 +11,25 @@ interface RegisterData {
   password: string;
 }
 
-export const login = (data: LoginData) => {
-<<<<<<< HEAD
-  return axios.post<{ access_token: string }>('/auth/login', data, {
-    withCredentials: true, 
+export const login = async (data: LoginData) => {
+  const response = await axios.post<{ login_token: string }>('/auth/login', data, {
+    withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
     },
   });
+  
+  // Guardar token en localStorage
+  if (response.data.login_token) {
+    localStorage.setItem('token', response.data.login_token);
+  }
+  
+  return response;
 };
+
 
 
 // POST: /auth/register
-=======
-  return axios.post<{ token: string }>('/auth/login', data);
-};
-
->>>>>>> d6a2411bcf253420affc705514ac1f9205218a9c
 export const register = (data: RegisterData) => {
   return axios.post('/auth/register', data);
 };

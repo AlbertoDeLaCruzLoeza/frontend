@@ -29,7 +29,7 @@ const LoginForm = () => {
     const res = await login({ ...values, recaptchaToken });
     console.log('Respuesta del login:', res);
 
-    localStorage.setItem('token', res.data.access_token);
+    localStorage.setItem('token', res.data.login_token);
     message.success('Inicio de sesión exitoso');
     navigate('/menu');
   } catch (err: any) {
