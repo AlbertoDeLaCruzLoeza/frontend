@@ -4,11 +4,13 @@ import axios from './axios';
 interface LoginData {
   email: string;
   password: string;
-  recaptchaToken: string;  
+  recaptchaToken: string;
 }
+
 interface RegisterData {
   email: string;
   password: string;
+  recaptchaToken?: string; // opcional si no se usa en registro
 }
 
 export const login = async (data: LoginData) => {
@@ -18,6 +20,8 @@ export const login = async (data: LoginData) => {
       'Content-Type': 'application/json',
     },
   });
+
+  console.log('Login response:', response.data);
   
   // Guardar token en localStorage
   if (response.data.login_token) {
