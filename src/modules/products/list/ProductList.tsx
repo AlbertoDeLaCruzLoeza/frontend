@@ -1,8 +1,17 @@
-// src/modules/products/list/ProductList.tsx
-import { Button, DatePicker, Input, Popconfirm, Select, Space, Switch, Table, message } from 'antd';
+import {
+  Button,
+  DatePicker,
+  Input,
+  Popconfirm,
+  Select,
+  Space,
+  Switch,
+  Table,
+  message,
+} from 'antd';
 import { useEffect, useState } from 'react';
-import { getProducts, deleteProduct } from '../../../api/productsService';
 import { useNavigate } from 'react-router-dom';
+import { getProducts, deleteProduct } from '../../../api/productsService';
 
 const { RangePicker } = DatePicker;
 
@@ -12,14 +21,15 @@ interface Filters {
   createdEndDate: string;
   updatedStartDate: string;
   updatedEndDate: string;
-  isActive?: string; // o isActive: string | undefined
+  isActive?: string;
   brandIds: string;
   supplierIds: string;
 }
 
 const ProductList = () => {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [filters, setFilters] = useState<Filters>({
     search: '',
     createdStartDate: '',
@@ -28,7 +38,7 @@ const ProductList = () => {
     updatedEndDate: '',
     isActive: undefined,
     brandIds: '',
-    supplierIds: ''
+    supplierIds: '',
   });
 
   const navigate = useNavigate();
@@ -49,9 +59,12 @@ const ProductList = () => {
     try {
       const params = cleanFilters(filters);
       const res = await getProducts(params);
-      setProducts(res.data);
-    } catch {
+      const records = res?.data?.data?.records;
+      setProducts(Array.isArray(records) ? records : []);
+    } catch (err) {
+      console.error('Error al obtener productos:', err);
       message.error('Error al cargar productos');
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -108,15 +121,31 @@ const ProductList = () => {
   };
 
   const columns = [
-    { title: 'Nombre', dataIndex: 'name' },
-    { title: 'Precio', dataIndex: 'price' },
-    { title: 'Stock', dataIndex: 'stock' },
+    { title: 'ID', dataIndex: 'product_id', key: 'product_id' },
+    { title: 'Nombre', dataIndex: 'name', key: 'name' },
+    { title: 'Código', dataIndex: 'code', key: 'code' },
+    {
+      title: 'Precio',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price: number) =>
+        new Intl.NumberFormat('es-MX', {
+          style: 'currency',
+          currency: 'MXN',
+          minimumFractionDigits: 2,
+        }).format(price),
+    },
+    { title: 'Marca', dataIndex: 'brand_name', key: 'brand_name' },
     {
       title: 'Acciones',
+      key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <Button onClick={() => navigate(`/products/edit/${record.id}`)}>Editar</Button>
-          <Popconfirm title="¿Seguro que deseas eliminar?" onConfirm={() => handleDelete(record.id)}>
+          <Button onClick={() => navigate(`/products/edit/${record.product_id}`)}>Editar</Button>
+          <Popconfirm
+            title="¿Seguro que deseas eliminar?"
+            onConfirm={() => handleDelete(record.product_id)}
+          >
             <Button danger>Eliminar</Button>
           </Popconfirm>
         </Space>
@@ -164,11 +193,12 @@ const ProductList = () => {
           Nuevo Producto
         </Button>
       </Space>
+
       <Table
         columns={columns}
-        dataSource={products || []}
+        dataSource={products}
         loading={loading}
-        rowKey={(record, index) => record.id || index}
+        rowKey="product_id"
       />
     </div>
   );
