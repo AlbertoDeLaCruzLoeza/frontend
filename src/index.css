@@ -13,6 +13,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -65,4 +69,14 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.invisible-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE 10+ */
+}
+
+.invisible-scrollbar::-webkit-scrollbar {
+  display: none;               /* Chrome, Safari, Edge */
 }

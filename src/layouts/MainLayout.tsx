@@ -129,7 +129,13 @@ const MainLayout = () => {
             })}
           </Breadcrumb>
 
-          <div style={{ padding: 24, background: '#fff', minHeight: 'calc(100vh - 160px)' }}>
+          <div 
+          className='invisible-scrollbar'
+          style={{ padding: 24,
+                        background: '#fff',
+                        height: 'calc(100vh - 112px)', // Ajuste para Header (64px) + Breadcrumb (48px)
+                        overflowY: 'auto' }}
+          >
             <Routes>
               <Route path="/" element={<Home />} />
 

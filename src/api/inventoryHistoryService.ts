@@ -1,5 +1,5 @@
 // src/api/inventoryHistoryService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getInventoryHistory = () => axios.get('/inventory-history');
 export const getInventoryHistoryById = (id: string) => axios.get(`/inventory-history/${id}`);

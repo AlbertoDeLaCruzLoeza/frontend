@@ -1,5 +1,5 @@
 // src/api/usersService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getUsers = () => axios.get('/users');
 export const getUserById = (id: string) => axios.get(`/users/${id}`);
