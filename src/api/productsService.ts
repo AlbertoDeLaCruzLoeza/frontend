@@ -59,7 +59,7 @@ const transformFilters = (filters: RawFilters): Record<string, any> => {
     const { type, start, end } = activeDateFilter;
 
     if (!(start && end)) {
-      throw new Error(Debe especificar ambas fechas para el filtro ${type});
+      throw new Error(`Debe especificar ambas fechas para el filtro ${type}`);
     }
 
     const startDate = new Date(start);
@@ -87,10 +87,10 @@ export const getProducts = (filters: RawFilters = {}) => {
   return axios.get('/products', { params });
 };
 
-export const getProductById = (id: string) => axios.get(/products/${id});
+export const getProductById = (id: string) => axios.get(`/products/${id}`);
 
 export const createProduct = (data: any) => axios.post('/products', data);
 
-export const updateProduct = (id: string, data: any) => axios.put(/products/${id}, data);
+export const updateProduct = (id: string, data: any) => axios.put(`/products/${id}`, data);
 
-export const deleteProduct = (id: string) => axios.delete(/products/${id});
+export const deleteProduct = (id: string) => axios.delete(`/products/${id}`);

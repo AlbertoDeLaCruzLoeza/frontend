@@ -1,3 +1,4 @@
+// src/modules/brands/list/BrandList.tsx
 import {
   Button,
   Input,
@@ -21,7 +22,6 @@ const BrandList = () => {
 
   const defaultFilters = {
     search: '',
-    supplierIds: [] as number[],
     isActive: undefined as boolean | undefined,
     dateType: 'created_at' as 'created_at' | 'updated_at' | 'deleted_at',
     dateRange: [] as any[],
@@ -35,7 +35,6 @@ const BrandList = () => {
     try {
       const params: Record<string, any> = {};
       if (filters.search) params.search = filters.search;
-      if (filters.supplierIds.length) params.supplierIds = filters.supplierIds.join(',');
       if (filters.isActive !== undefined) params.isActive = filters.isActive;
       if (filters.dateRange.length === 2) {
         params.dateType = filters.dateType;
@@ -78,18 +77,18 @@ const BrandList = () => {
   }, []);
 
   const columns = [
-    { title: 'Marca', dataIndex: 'brand_name', key: 'brand_name' },
+    { title: 'Marca', dataIndex: 'name', key: 'name' },
     { title: 'Descripción', dataIndex: 'description', key: 'description' },
-    { title: 'Proveedor', dataIndex: 'supplier_name', key: 'supplier_name' },
+    { title: '¿Activa?', dataIndex: 'isActive', key: 'isActive' },
     {
       title: 'Acciones',
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <Button onClick={() => navigate(`/brands/edit/${record.brand_id}`)}>Editar</Button>
+          <Button onClick={() => navigate(`/brands/edit/${record.id}`)}>Editar</Button>
           <Popconfirm
             title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.brand_id)}
+            onConfirm={() => handleDelete(record.id)}
           >
             <Button danger>Eliminar</Button>
           </Popconfirm>
@@ -103,22 +102,9 @@ const BrandList = () => {
       <Space direction="vertical" size="middle" style={{ marginBottom: 16, width: '100%' }}>
         <Space wrap>
           <Input
-            placeholder="Buscar por nombre, descripción o proveedor"
+            placeholder="Buscar por nombre o descripción"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          />
-          <Input
-            placeholder="IDs de proveedores (ej: 1,2,3)"
-            value={filters.supplierIds.join(',')}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                supplierIds: e.target.value
-                  .split(',')
-                  .map((v) => parseInt(v.trim()))
-                  .filter((n) => !isNaN(n)),
-              })
-            }
           />
           <Select
             placeholder="¿Activo?"
@@ -161,7 +147,7 @@ const BrandList = () => {
       <Table
         columns={columns}
         dataSource={brands}
-        rowKey={(record) => `${record.brand_id}-${record.supplier_id}`}
+        rowKey={(record) => record.id}
         loading={loading}
       />
     </div>
