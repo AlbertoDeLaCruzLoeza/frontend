@@ -11,6 +11,11 @@ const instance = axios.create({
 
 // Interceptor para agregar el token si existe
 instance.interceptors.request.use((config) => {
+  if (config.url === '/auth/login') {
+    // No agregamos token para la petición de login
+    return config;
+  }
+  
   const token = localStorage.getItem('token');
   console.log('Interceptor token:', token);
   if (token && config.headers) {

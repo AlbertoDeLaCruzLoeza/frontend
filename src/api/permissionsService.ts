@@ -1,5 +1,5 @@
 // src/api/permissionsService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getPermissions = () => axios.get('/permissions');
 export const getPermissionById = (id: string) => axios.get(`/permissions/${id}`);

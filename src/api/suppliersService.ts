@@ -1,5 +1,5 @@
 // src/api/suppliersService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getSuppliers = () => axios.get('/brand-suppliers'); // Corregido
 export const getSupplierById = (id: string) => axios.get(`/suppliers/${id}`);

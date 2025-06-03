@@ -15,45 +15,51 @@ const LoginForm = () => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const onFinish = async (values: any) => {
-  if (!recaptchaToken) {
-    message.warning('Por favor, completa el reCAPTCHA');
-    console.warn('No se ha completado el reCAPTCHA');
-    return;
-  }
+    if (!recaptchaToken) {
+      message.warning('Por favor, completa el reCAPTCHA');
+      console.warn('No se ha completado el reCAPTCHA');
+      return;
+    }
 
-  setLoading(true);
-  try {
-    console.log('Datos del formulario:', values);
-    console.log('Token reCAPTCHA:', recaptchaToken);
+    setLoading(true);
+    try {
+      console.log('Datos del formulario:', values);
+      console.log('Token reCAPTCHA:', recaptchaToken);
 
-    const res = await login({ ...values, recaptchaToken });
+    const res: any = await login({ ...values, recaptchaToken });
+    const token = res.data.data.records.login_token;      
     console.log('Respuesta del login:', res);
 
-    localStorage.setItem('token', res.data.login_token);
-    message.success('Inicio de sesión exitoso');
-    navigate('/menu');
-  } catch (err: any) {
-    console.error('Error en el login:', err);
-    if (axios.isAxiosError(err)) {
-      if (err.response?.status === 401) {
-        message.error('Correo o contraseña inválidos');
-      } else if (
-        err.response?.data?.message === 'reCAPTCHA inválido' ||
-        err.response?.data?.message?.includes('recaptcha')
-      ) {
-        message.error('El reCAPTCHA expiró o no es válido. Intenta de nuevo.');
+        if (token) {
+          localStorage.setItem('token', token);
+          message.success('Inicio de sesión exitoso');
+          navigate('/menu');
+        } else {
+          console.error('No se recibió el token de autenticación');
+        }
+
+    } catch (err: any) {
+      console.error('Error en el login:', err);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          message.error('Correo o contraseña inválidos');
+        } else if (
+          err.response?.data?.message === 'reCAPTCHA inválido' ||
+          err.response?.data?.message?.includes('recaptcha')
+        ) {
+          message.error('El reCAPTCHA expiró o no es válido. Intenta de nuevo.');
+        } else {
+          message.error('Error del servidor. Intenta nuevamente.');
+        }
       } else {
-        message.error('Error del servidor. Intenta nuevamente.');
+        message.error('Ocurrió un error inesperado.');
       }
-    } else {
-      message.error('Ocurrió un error inesperado.');
+    } finally {
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
+      setLoading(false);
     }
-  } finally {
-    recaptchaRef.current?.reset();
-    setRecaptchaToken(null);
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div

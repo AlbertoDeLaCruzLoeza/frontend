@@ -1,5 +1,5 @@
 // src/api/inventoryMovementService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getInventoryMovements = () => axios.get('/inventory-movement');
 export const getInventoryMovementById = (id: string) => axios.get(`/inventory-movement/${id}`);

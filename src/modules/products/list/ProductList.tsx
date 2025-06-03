@@ -166,7 +166,7 @@ const ProductList = () => {
       </Space>
       <Table
         columns={columns}
-        dataSource={products}
+        dataSource={products || []}
         loading={loading}
         rowKey={(record, index) => record.id || index}
       />

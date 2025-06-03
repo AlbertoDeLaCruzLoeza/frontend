@@ -1,5 +1,5 @@
 // src/api/categoriesService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getCategories = () => axios.get('/categories');
 export const getCategoryById = (id: string) => axios.get(`/categories/${id}`);

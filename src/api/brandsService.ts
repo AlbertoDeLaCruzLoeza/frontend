@@ -1,5 +1,5 @@
 // src/api/brandsService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 export const getBrands = (params: Record<string, any> = {}) => axios.get('/brands', { params });
 export const getBrandById = (id: string) => axios.get(`/brands/${id}`);

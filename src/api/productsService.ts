@@ -1,5 +1,5 @@
 // src/api/productsService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 type RawFilters = {
   search?: string;

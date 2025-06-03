@@ -33,6 +33,8 @@ import RoleForm from '../modules/roles/form/RoleForm';
 import PermissionList from '../modules/permissions/list/PermissionList';
 import PermissionForm from '../modules/permissions/form/PermissionForm';
 
+import Home from '../modules/home/Home';
+
 const routes = createBrowserRouter([
   {
     path: '/',
