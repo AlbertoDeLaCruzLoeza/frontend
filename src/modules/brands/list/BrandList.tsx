@@ -43,7 +43,25 @@ const BrandList = () => {
       }
 
       const res = await getBrands(params);
-      setBrands(res.data.records);
+      const allRecords = res.data?.data?.records || [];
+
+      // Agrupar por brand_id
+      const uniqueBrands = Object.values(
+        allRecords.reduce((acc: any, item: any) => {
+          const brandId = item.brand_id;
+          if (!acc[brandId]) {
+            acc[brandId] = {
+              id: item.brand_id,
+              name: item.brand_name,
+              description: item.description,
+              isActive: true, // Ajusta si el backend proporciona este valor
+            };
+          }
+          return acc;
+        }, {})
+      );
+
+      setBrands(uniqueBrands);
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Error al cargar marcas';
       message.error(msg);
@@ -79,7 +97,12 @@ const BrandList = () => {
   const columns = [
     { title: 'Marca', dataIndex: 'name', key: 'name' },
     { title: 'Descripción', dataIndex: 'description', key: 'description' },
-    { title: '¿Activa?', dataIndex: 'isActive', key: 'isActive' },
+    {
+      title: '¿Activa?',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (value: boolean) => (value ? 'Sí' : 'No'),
+    },
     {
       title: 'Acciones',
       key: 'actions',
