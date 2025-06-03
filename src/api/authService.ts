@@ -1,5 +1,5 @@
 // src/api/authService.ts
-import axios from './axios';
+import axios from './axiosInstance';
 
 interface LoginData {
   email: string;
