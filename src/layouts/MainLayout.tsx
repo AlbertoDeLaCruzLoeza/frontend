@@ -132,7 +132,7 @@ const MainLayout = () => {
 
         <Content style={{ padding: '16px' }}>
           <Breadcrumb style={{ marginBottom: 16 }}>
-            <Breadcrumb.Item><Link to="/">Inicio</Link></Breadcrumb.Item>
+            <Breadcrumb.Item><Link to="/home">Inicio</Link></Breadcrumb.Item>
             {pathSnippets.map((part, index) => {
               const key = pathSnippets[index];
               const parent = pathSnippets[0];

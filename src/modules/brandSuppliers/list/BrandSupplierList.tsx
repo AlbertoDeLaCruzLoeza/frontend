@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   getFilteredBrandSuppliers,
   deleteBrandSupplier,
+  reactivateBrandSupplier,
 } from '../../../api/brandSupplierService';
 import { getBrands } from '../../../api/brandsService';
 
@@ -25,7 +26,7 @@ interface BrandSupplier {
   supplier_name: string;
   contact_person: string;
   email: string;
-  phone: string;
+  phone?: string | null;
   address: string;
   supplier_is_active: string;
   brand_id: string;
@@ -72,9 +73,11 @@ const BrandSupplierList = () => {
         email: r.email,
         phone: r.phone,
         address: r.address,
-        supplier_is_active: r.supplier_is_active,
+        supplier_is_active: r.supplier_is_active?.toLowerCase().trim() === 'sí',
         brand_id: r.brand_id,
       }));
+
+      mappedRecords.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setData(mappedRecords);
     } catch (error) {
@@ -108,12 +111,28 @@ const BrandSupplierList = () => {
     }
   };
 
+  const handleReactivate = async (id: string) => {
+  try {
+    await reactivateBrandSupplier(id);
+    message.success('Proveedor reactivado');
+    fetchData(); // Vuelve a cargar los datos actualizados
+  } catch {
+    message.error('No se pudo reactivar el proveedor');
+  }
+};
+
+
   useEffect(() => {
     fetchData();
     fetchBrands();
   }, []);
 
   const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'supplier_id',
+      key: 'supplier_id',
+    },
     {
       title: 'Marca',
       dataIndex: 'brand_name',
@@ -138,6 +157,7 @@ const BrandSupplierList = () => {
       title: 'Teléfono',
       dataIndex: 'phone',
       key: 'phone',
+      render: (phone: any) => formatPhoneNumber(phone),
     },
     {
       title: 'Dirección',
@@ -157,12 +177,18 @@ const BrandSupplierList = () => {
           <Button onClick={() => navigate(`/brand-suppliers/edit/${record.supplier_id}`)}>
             Editar
           </Button>
-          <Popconfirm
-            title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.supplier_id)}
-          >
-            <Button danger>Eliminar</Button>
-          </Popconfirm>
+          {record.supplier_is_active ? (
+            <Popconfirm
+              title="¿Seguro que deseas eliminar?"
+              onConfirm={() => handleDelete(record.supplier_id)}
+            >
+              <Button danger>Eliminar</Button>
+            </Popconfirm>
+          ) : (
+            <Button type="default" onClick={() => handleReactivate(record.supplier_id)}>
+              Reactivar
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -266,3 +292,22 @@ const BrandSupplierList = () => {
 };
 
 export default BrandSupplierList;
+function formatPhoneNumber(phone: any) {
+  if (typeof phone !== 'string') return '-';
+
+  const digits = phone.replace(/\D/g, '');
+
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+52 ${digits[0]} ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+
+  if (digits.length === 13 && digits.startsWith('521')) {
+    return `+52 ${digits.slice(2, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
+  }
+
+  return phone;
+}

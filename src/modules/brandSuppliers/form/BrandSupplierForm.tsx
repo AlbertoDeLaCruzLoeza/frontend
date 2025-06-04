@@ -1,30 +1,23 @@
-import { Button, Form, Select, message } from 'antd';
+// src/modules/brandSuppliers/form/BrandSupplierForm.tsx
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  message,
+  Select,
+  Switch,
+  Spin,
+} from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-
-const mockBrands = [
-  { id: 10, name: 'Microsoft' },
-  { id: 20, name: 'Apple' },
-  { id: 30, name: 'Samsung' },
-  { id: 40, name: 'Sony' },
-  { id: 50, name: 'LG' },
-];
-
-const mockSuppliers = [
-  { id: 100, name: 'Ingram Micro' },
-  { id: 200, name: 'Tech Data' },
-  { id: 300, name: 'Synnex' },
-  { id: 400, name: 'Arrow Electronics' },
-  { id: 500, name: 'Avnet' },
-];
-
-const mockBrandSuppliers = [
-  { id: 1, brandId: 10, supplierId: 100 },
-  { id: 2, brandId: 20, supplierId: 200 },
-  { id: 3, brandId: 30, supplierId: 300 },
-  { id: 4, brandId: 40, supplierId: 400 },
-  { id: 5, brandId: 50, supplierId: 500 },
-];
+import { getBrands } from '../../../api/brandsService';
+import { getSuppliers } from '../../../api/suppliersService';
+import {
+  createBrandSupplier,
+  getBrandSupplierById,
+  updateBrandSupplier,
+} from '../../../api/brandSupplierService';
 
 const BrandSupplierForm = () => {
   const [form] = Form.useForm();
@@ -32,66 +25,202 @@ const BrandSupplierForm = () => {
   const navigate = useNavigate();
   const isEdit = !!id;
 
-  const [brands] = useState(mockBrands);
-  const [suppliers] = useState(mockSuppliers);
+  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (isEdit) {
-      // Simular carga del registro para editar
-      const record = mockBrandSuppliers.find((item) => item.id === Number(id));
-      if (record) {
-        form.setFieldsValue({
-          brandId: record.brandId,
-          supplierId: record.supplierId,
-        });
-      }
-    }
-  }, [id, form, isEdit]);
+    const fetchInitialData = async () => {
+      try {
+        const [brandsRes, suppliersRes] = await Promise.all([
+          getBrands(),
+          getSuppliers(),
+        ]);
 
-  const onFinish = (values: any) => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (isEdit) {
-        message.success('Relación actualizada');
-      } else {
-        message.success('Relación creada');
+        setBrands(brandsRes.data?.data?.records || []);
+        setSuppliers(suppliersRes.data?.data?.records || []);
+
+        const records = brandsRes.data?.data?.records || [];
+
+          const uniqueBrands = Object.values(
+            records.reduce((acc: Record<number, { id: number; name: string }>, item: any) => {
+              const brandId = item.brand_id;
+              if (!acc[brandId]) {
+                acc[brandId] = {
+                  id: brandId,
+                  name: item.brand_name,
+                };
+              }
+              return acc;
+            }, {})
+          );
+
+          setBrands(uniqueBrands);
+
+        if (isEdit && id) {
+          const res = await getBrandSupplierById(id);
+          const record = res.data?.data?.records;
+          const fetchedBrands = brandsRes.data?.data?.records || [];
+          
+
+          const matchedBrand = uniqueBrands.find(
+            (b) => b.name === record.brand?.name
+          );
+
+          form.setFieldsValue({
+            name: record.name,
+            contactPerson: record.contactPerson,
+            email: record.email,
+            phone: record.phone,
+            address: record.address,
+            brandId: matchedBrand ? matchedBrand.id : null,
+            isActive: record.isActive === 'Sí',
+          });
+        }
+      } catch (error) {
+        console.error(error);
+        message.error('Error al cargar datos iniciales');
+      } finally {
+        setInitialLoading(false);
       }
+    };
+
+    fetchInitialData();
+  }, [id, isEdit, form]);
+
+  const onFinish = async (values: any) => {
+    setLoading(true);
+
+    const payload = {
+      name: values.name,
+      contactPerson: values.contactPerson,
+      email: values.email,
+      phone: values.phone,
+      address: values.address,
+      brandId: Number(values.brandId),
+      isActive: values.isActive,
+    };
+
+    try {
+      if (isEdit && id) {
+        await updateBrandSupplier(id, payload);
+        message.success('Proveedor actualizado con éxito');
+      } else {
+        await createBrandSupplier(payload);
+        message.success('Proveedor creado con éxito');
+      }
+
       navigate('/brand-suppliers');
-    }, 1000);
+    } catch (error: any) {
+      console.error(error);
+      if (error?.response?.status === 409) {
+        message.error('El email ya está registrado');
+      } else {
+        message.error('Error al guardar el proveedor');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
+  if (initialLoading) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: 50 }}>
+        <Spin tip="Cargando..." />
+      </div>
+    );
+  }
+
   return (
-    <Form layout="vertical" form={form} onFinish={onFinish}>
-      <Form.Item
-        label="Marca"
-        name="brandId"
-        rules={[{ required: true, message: 'La marca es obligatoria' }]}
-      >
-        <Select
-          placeholder="Seleccione una marca"
-          options={brands.map((b) => ({ value: b.id, label: b.name }))}
-        />
-      </Form.Item>
+    <Card title={isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor'}>
+      <Form layout="vertical" form={form} onFinish={onFinish} initialValues={{
+    brandId: undefined, 
+  }}>
+        <Form.Item
+          label="Nombre del proveedor"
+          name="name"
+          rules={[{ required: true, message: 'El nombre es obligatorio' }]}
+        >
+          <Input />
+        </Form.Item>
 
-      <Form.Item
-        label="Proveedor"
-        name="supplierId"
-        rules={[{ required: true, message: 'El proveedor es obligatorio' }]}
-      >
-        <Select
-          placeholder="Seleccione un proveedor"
-          options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
-        />
-      </Form.Item>
+        <Form.Item
+          label="Persona de contacto"
+          name="contactPerson"
+          rules={[{ required: true, message: 'Este campo es obligatorio' }]}
+        >
+          <Input />
+        </Form.Item>
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading}>
-          {isEdit ? 'Actualizar' : 'Crear'}
-        </Button>
-      </Form.Item>
-    </Form>
+        <Form.Item
+          label="Correo electrónico"
+          name="email"
+          rules={[
+            { required: true, message: 'El correo es obligatorio' },
+            { type: 'email', message: 'Correo inválido' },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Teléfono"
+          name="phone"
+          rules={[{ required: true, message: 'El teléfono es obligatorio' }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Dirección"
+          name="address"
+          rules={[{ required: true, message: 'La dirección es obligatoria' }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Marca"
+          name="brandId"
+          rules={[{ required: true, message: 'Seleccione una marca' }]}
+        >
+          <Select
+            options={brands.map((brand) => ({
+              label: brand.name,
+              value: brand.id,
+            }))}
+            placeholder="Seleccione una marca"
+          />
+        </Form.Item>
+
+        <Form.Item label="Estado actual">
+          <Form.Item name="isActive" valuePropName="checked" noStyle>
+            <Switch
+              defaultChecked={false}
+              checkedChildren="Activo"
+              unCheckedChildren="Inactivo"
+            />
+          </Form.Item>
+          <span style={{ marginLeft: 10 }}>
+            {form.getFieldValue('isActive') ? 'Activo' : 'Inactivo'}
+          </span>
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            {isEdit ? 'Actualizar' : 'Crear'}
+          </Button>
+          <Button
+            type="default"
+            style={{ marginLeft: 8 }}
+            onClick={() => navigate('/brand-suppliers')}
+          >
+            Cancelar
+          </Button>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 };
 

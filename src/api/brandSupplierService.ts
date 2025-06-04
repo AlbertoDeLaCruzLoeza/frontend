@@ -49,3 +49,6 @@ export const getBrandSupplierById = (id: string) => axios.get(`/brand-suppliers/
 export const createBrandSupplier = (data: any) => axios.post('/brand-suppliers', data);
 export const updateBrandSupplier = (id: string, data: any) => axios.put(`/brand-suppliers/${id}`, data);
 export const deleteBrandSupplier = (id: string) => axios.delete(`/brand-suppliers/${id}`);
+export const reactivateBrandSupplier = (id: string) => {
+  return axios.patch(`/brand-suppliers/${id}/reactivate`);
+};

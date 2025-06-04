@@ -1,15 +1,14 @@
-// src/modules/home/Home.tsx
-import { Card, CardContent, Typography, Box, AppBar, Toolbar } from "@mui/material";
+// Enhanced Home Page Styling to match premium skincare aesthetic
+import { Card, CardContent, Typography, Box, AppBar, Toolbar, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Package, Tag, Truck, Users, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import "../../index.css";
-import "@fontsource/poppins/400.css";   
-import "@fontsource/poppins/600.css";   
-import "@fontsource/poppins/700.css";   
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/poppins/700.css";
 import "@fontsource/montserrat/400.css";
-import "@fontsource/montserrat/600.css"; 
-
+import "@fontsource/montserrat/600.css";
 
 const sections = [
   { name: "Productos", icon: <Package size={28} />, to: "/products" },
@@ -22,89 +21,115 @@ const sections = [
 const Home = () => {
   return (
     <>
-      {/* Header fijo y elegante */}
       <AppBar
         position="sticky"
-        elevation={4}
+        elevation={0}
         sx={{
-          background: "#1E293B",
-          color: "#fff",
-          mb: 6,
+          backgroundColor: "#fff",
+          color: "#111",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+          borderBottom: "1px solid #eee",
         }}
       >
-        <Toolbar sx={{ justifyContent: "center" }}>
-          <Typography variant="h4" sx={{ fontFamily: "'Poppins', serif", fontWeight: 700 }}>
+        <Toolbar sx={{ justifyContent: "center", py: 2 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 700,
+              color: "#2c2c2c",
+            }}
+          >
             Tienda Tech - Panel
           </Typography>
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ px: { xs: 3, sm: 6 }, pb: 8 }}>
-        {/* Título + subtítulo */}
+      <Box
+        sx={{
+          px: { xs: 3, sm: 6 },
+          py: 8,
+          background: "linear-gradient(180deg, #fafafa 0%, #f4f4f4 100%)",
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          style={{ marginBottom: 40 }}
+          style={{ marginBottom: 50 }}
         >
           <Typography
             variant="h2"
             fontWeight="700"
-            sx={{ fontFamily: "'Poppins', serif", mb: 1, color: "#1E293B" }}
+            sx={{
+              fontFamily: "'Poppins', sans-serif",
+              color: "#2c2c2c",
+              textAlign: "center",
+              fontSize: { xs: "2rem", md: "2.75rem" },
+              mb: 1,
+            }}
           >
-            Panel de Control
+            Bienvenido al Panel de Control
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary" sx={{ fontSize: 18 }}>
-            Accede a las secciones de tu sistema de tienda tecnológica.
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: "#666",
+              fontSize: 18,
+              textAlign: "center",
+              maxWidth: 600,
+              mx: "auto",
+            }}
+          >
+            Gestiona tus productos, marcas y usuarios de forma eficiente y elegante.
           </Typography>
         </motion.div>
 
-        {/* Grid con tarjetas animadas */}
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
-            gap: 4,
+            gap: 5,
           }}
         >
           {sections.map((section, index) => (
             <motion.div
               key={section.name}
-              whileHover={{ scale: 1.07, boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)" }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(0,0,0,0.08)" }}
+              whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.15, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
             >
               <Link to={section.to} style={{ textDecoration: "none" }}>
                 <Card
-                  elevation={3}
+                  elevation={0}
                   sx={{
-                    p: 3,
+                    borderRadius: 4,
+                    p: 4,
+                    background: "#fff",
+                    border: "1px solid #eee",
                     display: "flex",
-                    gap: 3,
-                    alignItems: "center",
-                    borderRadius: 3,
-                    cursor: "pointer",
-                    background: "linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%)",
-                    transition: "background-color 0.3s ease",
-                    "&:hover": {
-                      background: "linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%)",
-                    },
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 2,
+                    minHeight: 160,
+                    transition: "all 0.3s ease",
                   }}
                 >
-                  <Box sx={{ color: "#4f46e5" }}>{section.icon}</Box>
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "#3730a3", fontFamily: "'Montserrat', sans-serif" }}
-                    >
-                      {section.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      Gestionar {section.name.toLowerCase()}
-                    </Typography>
-                  </Box>
+                  <Box sx={{ color: "#111", mb: 2 }}>{section.icon}</Box>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 600, color: "#333" }}
+                  >
+                    {section.name}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#777", fontWeight: 500 }}
+                  >
+                    Gestionar {section.name.toLowerCase()}
+                  </Typography>
                 </Card>
               </Link>
             </motion.div>
