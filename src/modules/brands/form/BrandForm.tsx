@@ -1,5 +1,4 @@
-// src/modules/brands/form/BrandForm.tsx
-import { Button, Form, Input, message } from 'antd';
+import { Button, Form, Input, message, Switch } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createBrand, getBrandById, updateBrand } from '../../../api/brandsService';
@@ -8,7 +7,7 @@ import { brandValidationRules } from '../validate/brandRules';
 const BrandForm = () => {
   const [form] = Form.useForm();
   const { id } = useParams();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const [loading, setLoading] = useState(false);
 
   const isEdit = !!id;
@@ -44,6 +43,15 @@ const BrandForm = () => {
       <Form.Item name="name" label="Nombre" rules={brandValidationRules.name}>
         <Input />
       </Form.Item>
+
+      <Form.Item name="description" label="Descripción" rules={brandValidationRules.description}>
+        <Input.TextArea rows={4} />
+      </Form.Item>
+
+      <Form.Item name="isActive" label="¿Está activa?" valuePropName="checked">
+        <Switch />
+      </Form.Item>
+
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
           {isEdit ? 'Actualizar' : 'Crear'}

@@ -11,7 +11,7 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import { getBrands, deleteBrand } from '../../../api/brandsService';
-import { getSuppliers } from '../../../api/suppliersService'; // <-- Asumido
+import { getSuppliers } from '../../../api/suppliersService';
 import { useNavigate } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
@@ -19,7 +19,7 @@ const { Option } = Select;
 
 const BrandList = () => {
   const [brands, setBrands] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);  // Para el selector
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const defaultFilters = {
@@ -27,18 +27,17 @@ const BrandList = () => {
     isActive: undefined as boolean | undefined,
     dateType: 'created_at' as 'created_at' | 'updated_at' | 'deleted_at',
     dateRange: [] as any[],
-    supplierIds: [] as number[],  // <-- nuevo filtro proveedores
+    supplierIds: [] as number[],
   };
 
   const [filters, setFilters] = useState(defaultFilters);
   const navigate = useNavigate();
 
-  // Obtener proveedores para el selector
   const fetchSuppliers = async () => {
     try {
       const res = await getSuppliers();
       setSuppliers(res.data?.data?.records || []);
-    } catch (error) {
+    } catch {
       message.error('Error al cargar proveedores');
     }
   };
@@ -55,22 +54,21 @@ const BrandList = () => {
         params.endDate = filters.dateRange[1].format('YYYY-MM-DD');
       }
       if (filters.supplierIds.length > 0) {
-        params.supplierIds = filters.supplierIds.join(','); // Pasar como coma separada
+        params.supplierIds = filters.supplierIds.join(',');
       }
 
       const res = await getBrands(params);
       const allRecords = res.data?.data?.records || [];
 
-      // Agrupar por brand_id
       const uniqueBrands = Object.values(
         allRecords.reduce((acc: any, item: any) => {
-          const brandId = item.brand_id;
+          const brandId = item.brand_id || item.brandId || item.id;
           if (!acc[brandId]) {
             acc[brandId] = {
-              id: item.brand_id,
-              name: item.brand_name,
+              id: brandId,
+              name: item.brand_name || item.name,
               description: item.description,
-              isActive: true, // Ajustar si backend proporciona este valor
+              isActive: item.is_active ?? true,
             };
           }
           return acc;
@@ -103,12 +101,15 @@ const BrandList = () => {
 
   const handleResetFilters = () => {
     setFilters(defaultFilters);
-    fetchBrands();
   };
+
+  // 🔄 Actualizar marcas cada vez que cambian los filtros
+  useEffect(() => {
+    fetchBrands();
+  }, [filters]);
 
   useEffect(() => {
     fetchSuppliers();
-    fetchBrands();
   }, []);
 
   const columns = [
