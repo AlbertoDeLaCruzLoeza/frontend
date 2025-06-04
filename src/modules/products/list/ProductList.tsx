@@ -64,17 +64,22 @@ const ProductList = () => {
       const res = await getProducts(params);
       const records = res.data?.data?.records || [];
 
-      const uniqueProducts = Object.values(
-        records.reduce((acc: any, item: any) => {
-          const id = item.product_id;
-          if (!acc[id]) {
-            acc[id] = item;
-          }
-          return acc;
-        }, {})
-      );
+      const seen = new Set();
+      const uniqueProducts: any[] = [];
+
+      for (const item of records) {
+        if (!seen.has(item.product_id)) {
+          seen.add(item.product_id);
+          uniqueProducts.push(item);
+        }
+      }
+
+      uniqueProducts.sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
 
       setProducts(uniqueProducts);
+
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Error al cargar productos';
       message.error(msg);

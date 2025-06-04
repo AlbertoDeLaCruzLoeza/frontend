@@ -26,49 +26,58 @@ const ProductForm = () => {
 
   const isEdit = Boolean(id);
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const res = await getBrands();
-        const records = res.data?.data?.records || [];
+ useEffect(() => {
+  const fetchInitialData = async () => {
+    try {
+      const resBrands = await getBrands();
+      const records = resBrands.data?.data?.records || [];
 
-        const uniqueBrands = Object.values(
-          records.reduce((acc: Record<number, { id: number; name: string }>, item: any) => {
-            const brandId = item.brand_id;
-            if (!acc[brandId]) {
-              acc[brandId] = {
-                id: brandId,
-                name: item.brand_name,
-              };
-            }
-            return acc;
-          }, {})
+      const uniqueBrands = Object.values(
+        records.reduce((acc: Record<number, { id: number; name: string }>, item: any) => {
+          const brandId = item.brand_id;
+          if (!acc[brandId]) {
+            acc[brandId] = {
+              id: brandId,
+              name: item.brand_name,
+            };
+          }
+          return acc;
+        }, {})
+      );
+
+      console.log('Marcas únicas:', uniqueBrands);
+      setBrands(uniqueBrands);
+
+      if (isEdit && id) {
+        const resProduct = await getProductById(id);
+        const product = resProduct.data?.data?.records;
+
+        console.log('Producto:', product);
+        const matchedBrand = uniqueBrands.find(
+          b => b.name.trim().toLowerCase() === product.brand_name.trim().toLowerCase()
         );
 
-        setBrands(uniqueBrands);
+        console.log('Marca encontrada:', matchedBrand);
 
-        if (isEdit && id) {
-        const res = await getProductById(id);
-        const product = res.data?.data?.records; // Aquí extraemos el objeto correcto
-          form.setFieldsValue({
-            code: product.code,
-            name: product.product_name,         // Aquí el nombre está como "product_name"
-            description: product.description,
-            price: Number(product.price),       // Asegúrate que sea número, ya que viene string
-            brandId: brands.find(b => b.name === product.brand_name)?.id, // Busca la marca por nombre para asignar id
-            isActive: product.is_active === 'Sí', // Convierte "Sí"/"No" a boolean
-          });
-        }
-      } catch (error) {
-        console.error(error);
-        message.error('Error al cargar datos iniciales');
-      } finally {
-        setInitialLoading(false);
+        form.setFieldsValue({
+          code: product.code,
+          name: product.product_name,
+          description: product.description,
+          price: Number(product.price),
+          brandId: matchedBrand ? matchedBrand.id : null,
+          isActive: product.is_active === 'Sí',
+        });
       }
-    };
+    } catch (error) {
+      console.error(error);
+      message.error('Error al cargar datos iniciales');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
-    fetchInitialData();
-  }, [id, isEdit, form]);
+  fetchInitialData();
+}, [id, isEdit, form]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -171,6 +180,13 @@ const ProductForm = () => {
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
             {isEdit ? 'Actualizar' : 'Crear'}
+          </Button>
+
+          <Button
+            type="default"
+            onClick={() => navigate('/products')}
+          >
+            Cancelar
           </Button>
         </Form.Item>
       </Form>
