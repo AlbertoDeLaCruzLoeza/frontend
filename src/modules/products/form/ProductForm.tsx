@@ -3,6 +3,7 @@ import { Button, Card, Form, Input, InputNumber, message, Select, Switch } from 
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProduct, getProductById, updateProduct } from '../../../api/productsService';
+import { getBrands } from '../../../api/brandsService';
 import { productValidationRules } from '../validate/productRules';
 
 const ProductForm = () => {
@@ -15,41 +16,71 @@ const ProductForm = () => {
   const isEdit = !!id;
 
   useEffect(() => {
-    // MOCK temporal de marcas
-    const mockBrands = [
-      { id: 1, name: 'Apple' },
-      { id: 2, name: 'Samsung' },
-      { id: 3, name: 'Dell' },
-      { id: 4, name: 'HP' },
-      { id: 5, name: 'Lenovo' },
-      { id: 6, name: 'LG' },
-      { id: 7, name: 'Microsoft' },
-      { id: 8, name: 'Asus' },
-      { id: 9, name: 'Sony' },
-      { id: 10, name: 'Nescafe' },
-      { id: 11, name: 'CocaCola' },
-    ];
-    setBrands(mockBrands);
+    const fetchBrands = async () => {
+      try {
+        const res = await getBrands();
+        const allRecords = res.data?.data?.records || [];
+
+        const uniqueBrands = Object.values(
+          allRecords.reduce((acc: any, item: any) => {
+            const brandId = item.brand_id;
+            if (!acc[brandId]) {
+              acc[brandId] = {
+                id: brandId,
+                name: item.brand_name,
+              };
+            }
+            return acc;
+          }, {})
+        );
+        setBrands(uniqueBrands);
+      } catch (error) {
+        message.error('Error al cargar marcas');
+      }
+    };
+
+    fetchBrands();
 
     if (isEdit) {
       getProductById(id!).then(res => {
-        form.setFieldsValue(res.data);
+        const data = res.data;
+        form.setFieldsValue({
+          code: data.code,
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          brandId: data.brand_id,
+          isActive: data.is_active,
+        });
       });
     }
   }, [id]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
+
+    const payload = {
+      code: values.code,
+      name: values.name,
+      description: values.description,
+      price: values.price,
+      brandId: Number(values.brandId), // ✅ Convertimos a número
+      isActive: values.isActive,
+    };
+
+    console.log('Payload a enviar:', payload); // 👀 Verificación
+
     try {
       if (isEdit) {
-        await updateProduct(id!, values);
+        await updateProduct(id!, payload);
         message.success('Producto actualizado');
       } else {
-        await createProduct(values);
+        await createProduct(payload);
         message.success('Producto creado');
       }
       navigate('/products');
-    } catch {
+    } catch (err) {
+      console.error('Error en la creación:', err);
       message.error('Error al guardar producto');
     } finally {
       setLoading(false);
@@ -59,19 +90,31 @@ const ProductForm = () => {
   return (
     <Card title={isEdit ? 'Editar Producto' : 'Nuevo Producto'}>
       <Form layout="vertical" form={form} onFinish={onFinish}>
-        <Form.Item label="Código" name="code" rules={[{ required: true, message: 'El código es obligatorio' }]}>
+        <Form.Item
+          label="Código"
+          name="code"
+          rules={[{ required: true, message: 'El código es obligatorio' }]}
+        >
           <Input />
         </Form.Item>
         <Form.Item label="Nombre" name="name" rules={productValidationRules.name}>
           <Input />
         </Form.Item>
-        <Form.Item label="Descripción" name="description" rules={[{ required: true, message: 'La descripción es obligatoria' }]}>
+        <Form.Item
+          label="Descripción"
+          name="description"
+          rules={[{ required: true, message: 'La descripción es obligatoria' }]}
+        >
           <Input.TextArea rows={3} />
         </Form.Item>
         <Form.Item label="Precio" name="price" rules={productValidationRules.price}>
           <InputNumber min={0} style={{ width: '100%' }} />
         </Form.Item>
-        <Form.Item label="Marca" name="brandId" rules={[{ required: true, message: 'Seleccione una marca' }]}>
+        <Form.Item
+          label="Marca"
+          name="brandId"
+          rules={[{ required: true, message: 'Seleccione una marca' }]}
+        >
           <Select
             options={brands.map((brand) => ({
               label: brand.name,
@@ -80,7 +123,7 @@ const ProductForm = () => {
             placeholder="Seleccione una marca"
           />
         </Form.Item>
-        <Form.Item label="Activo" name="isActive" valuePropName="checked">
+        <Form.Item label="Activo" name="isActive" valuePropName="checked" initialValue={true}>
           <Switch />
         </Form.Item>
         <Form.Item>

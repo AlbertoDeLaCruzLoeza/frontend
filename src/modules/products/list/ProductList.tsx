@@ -36,7 +36,7 @@ const ProductList = () => {
     createdEndDate: '',
     updatedStartDate: '',
     updatedEndDate: '',
-    isActive: undefined,
+    isActive: 'true', // 👈 Mostrar solo productos activos por defecto
     brandIds: '',
     supplierIds: '',
   });
@@ -74,7 +74,7 @@ const ProductList = () => {
     try {
       await deleteProduct(id);
       message.success('Producto eliminado');
-      fetchProducts();
+      fetchProducts(); // 👈 Volver a cargar la lista con los filtros actuales
     } catch {
       message.error('Error al eliminar');
     }
@@ -186,7 +186,10 @@ const ProductList = () => {
             ]}
           />
           <span>Activo:</span>
-          <Switch onChange={handleActiveChange} checked={filters.isActive === 'true'} />
+          <Switch
+            onChange={handleActiveChange}
+            checked={filters.isActive !== 'false'} // 👈 reflejar el estado actual
+          />
           <Button type="primary" onClick={handleSearch}>Buscar</Button>
         </Space>
         <Button type="primary" onClick={() => navigate('/products/form')}>
