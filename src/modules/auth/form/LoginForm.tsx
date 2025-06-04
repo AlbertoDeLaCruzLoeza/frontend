@@ -33,7 +33,7 @@ const LoginForm = () => {
         if (token) {
           localStorage.setItem('token', token);
           message.success('Inicio de sesión exitoso');
-          navigate('/menu');
+          navigate('/home');
         } else {
           console.error('No se recibió el token de autenticación');
         }

@@ -11,6 +11,7 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import { getBrands, deleteBrand } from '../../../api/brandsService';
+import { getSuppliers } from '../../../api/suppliersService'; // <-- Asumido
 import { useNavigate } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
@@ -18,6 +19,7 @@ const { Option } = Select;
 
 const BrandList = () => {
   const [brands, setBrands] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);  // Para el selector
   const [loading, setLoading] = useState(false);
 
   const defaultFilters = {
@@ -25,10 +27,21 @@ const BrandList = () => {
     isActive: undefined as boolean | undefined,
     dateType: 'created_at' as 'created_at' | 'updated_at' | 'deleted_at',
     dateRange: [] as any[],
+    supplierIds: [] as number[],  // <-- nuevo filtro proveedores
   };
 
   const [filters, setFilters] = useState(defaultFilters);
   const navigate = useNavigate();
+
+  // Obtener proveedores para el selector
+  const fetchSuppliers = async () => {
+    try {
+      const res = await getSuppliers();
+      setSuppliers(res.data?.data?.records || []);
+    } catch (error) {
+      message.error('Error al cargar proveedores');
+    }
+  };
 
   const fetchBrands = async () => {
     setLoading(true);
@@ -40,6 +53,9 @@ const BrandList = () => {
         params.dateType = filters.dateType;
         params.startDate = filters.dateRange[0].format('YYYY-MM-DD');
         params.endDate = filters.dateRange[1].format('YYYY-MM-DD');
+      }
+      if (filters.supplierIds.length > 0) {
+        params.supplierIds = filters.supplierIds.join(','); // Pasar como coma separada
       }
 
       const res = await getBrands(params);
@@ -54,7 +70,7 @@ const BrandList = () => {
               id: item.brand_id,
               name: item.brand_name,
               description: item.description,
-              isActive: true, // Ajusta si el backend proporciona este valor
+              isActive: true, // Ajustar si backend proporciona este valor
             };
           }
           return acc;
@@ -91,6 +107,7 @@ const BrandList = () => {
   };
 
   useEffect(() => {
+    fetchSuppliers();
     fetchBrands();
   }, []);
 
@@ -138,6 +155,20 @@ const BrandList = () => {
           >
             <Option value={true}>Sí</Option>
             <Option value={false}>No</Option>
+          </Select>
+          <Select
+            placeholder="Proveedores"
+            mode="multiple"
+            value={filters.supplierIds}
+            onChange={(values) => setFilters({ ...filters, supplierIds: values })}
+            style={{ minWidth: 200 }}
+            allowClear
+          >
+            {suppliers.map((s) => (
+              <Option key={s.supplier_id} value={s.supplier_id}>
+                {s.supplier_name}
+              </Option>
+            ))}
           </Select>
           <Select
             placeholder="Tipo de fecha"

@@ -35,7 +35,9 @@ export const getFilteredBrandSuppliers = (filters: FilterParams) => {
   const params: Record<string, any> = cleanFilters(rest);
 
   if (dateType && startDate && endDate) {
-    params.dateFilter = JSON.stringify({ dateType, startDate, endDate });
+    params.dateType = dateType;
+    params.startDate = startDate;
+    params.endDate = endDate;
   }
 
   return axios.get('/brand-suppliers', { params });

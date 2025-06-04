@@ -105,8 +105,8 @@ const ProductList = () => {
 
       setSupplierOptions(
         supplierRecords.map((s: any) => ({
-          label: s.name,
-          value: s.id,
+          label: s.supplier_name,
+          value: s.supplier_id,
         }))
       );
     } catch (err) {

@@ -7,6 +7,7 @@ import {
   TeamOutlined,
   FileTextOutlined,
   LogoutOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet, Link, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -35,6 +36,9 @@ import RoleForm from '../modules/roles/form/RoleForm';
 import SupplierList from '../modules/suppliers/list/SupplierList';
 import SupplierForm from '../modules/suppliers/form/SupplierForm';
 import ActionLogList from '../modules/actionLogs/list/ActionLogList';
+import { logout } from '../api/authService';
+import { message } from 'antd';
+import axios from 'axios';
 
 const { Header, Content, Sider } = Layout;
 
@@ -79,19 +83,39 @@ const MainLayout = () => {
       breadcrumbNames[main] ||
       'Inicio';
 
-    document.title = `${title} | Mi App`;
+    document.title = `${title} | TiendApi`;
   }, [location]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    console.log('[Logout] Token recuperado:', token);
+
+    await logout(); // llama al servicio que manda el token
+
+    message.success('Sesión cerrada correctamente');
     localStorage.removeItem('token');
     navigate('/login');
-  };
+  } catch (error) {
+    console.error('[Logout] Error:', error);
+
+    if (axios.isAxiosError(error)) {
+      console.error('[Logout] Error response:', error.response?.data);
+      message.error(
+        error.response?.data?.message || 'Error al cerrar sesión'
+      );
+    } else {
+      message.error('Error inesperado al cerrar sesión');
+    }
+  }
+};
 
   return (
     <Layout style={{ minHeight: '100vh', width: '100vw' }}>
       <Sider collapsible>
-        <div style={{ color: '#fff', padding: 16, fontWeight: 'bold' }}>Mi App</div>
+        <div style={{ color: '#fff', padding: 16, fontWeight: 'bold' }}>TiendApi</div>
         <Menu theme="dark" selectedKeys={[`/${pathSnippets[0] || ''}`]} mode="inline">
+          <Menu.Item key="/menu" icon={<HomeOutlined />}><Link to="/home">Menú</Link></Menu.Item>
           <Menu.Item key="/users" icon={<UserOutlined />}><Link to="/users">Usuarios</Link></Menu.Item>
           <Menu.Item key="/products" icon={<ShopOutlined />}><Link to="/products">Productos</Link></Menu.Item>
           <Menu.Item key="/brands" icon={<TagsOutlined />}><Link to="/brands">Marcas</Link></Menu.Item>
@@ -137,7 +161,7 @@ const MainLayout = () => {
                         overflowY: 'auto' }}
           >
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
 
               <Route path="/users" element={<UserList />} />
               <Route path="/users/form" element={<UserForm />} />

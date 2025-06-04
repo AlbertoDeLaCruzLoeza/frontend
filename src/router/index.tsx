@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '../layouts/MainLayout';
 import UserList from '../modules/users/list/UserList';
 import UserForm from '../modules/users/form/UserForm';
@@ -33,13 +33,15 @@ import RoleForm from '../modules/roles/form/RoleForm';
 import PermissionList from '../modules/permissions/list/PermissionList';
 import PermissionForm from '../modules/permissions/form/PermissionForm';
 
-import Home from '../modules/home/Home';
+import LoginForm from '../modules/auth/form/LoginForm';
 
 const routes = createBrowserRouter([
+  { path: 'login', element: <LoginForm /> },
   {
     path: '/',
     element: <AppLayout />,
     children: [
+      { path: '', element: <Navigate to="/login" replace /> },
       {
         path: 'brand-suppliers',
         children: [

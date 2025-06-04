@@ -37,3 +37,14 @@ export const login = async (data: LoginData) => {
 export const register = (data: RegisterData) => {
   return axios.post('/auth/register', data);
 };
+
+export const logout = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Token no encontrado en localStorage');
+
+  return axios.post('/auth/logout', {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
