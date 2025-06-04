@@ -101,7 +101,7 @@ const routes = createBrowserRouter([
       {
         path: 'products',
         children: [
-          { path: '', element: <ProductList /> },
+          { path: '/home', element: <ProductList /> },
           { path: 'create', element: <ProductForm /> },
           { path: 'edit/:id', element: <ProductForm /> },
         ],

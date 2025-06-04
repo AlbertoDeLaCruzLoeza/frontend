@@ -72,7 +72,7 @@ export const getProducts = (filters: RawFilters = {}) => {
 };
 
 export const getProductById = (id: string | number) =>
-  axios.get(`/products/${id}`);
+  axios.get(`/products/view/${id}`);
 
 export const createProduct = (data: any) =>
   axios.post('/products', data);

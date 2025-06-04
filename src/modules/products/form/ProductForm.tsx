@@ -1,5 +1,15 @@
 // src/modules/products/form/ProductForm.tsx
-import { Button, Card, Form, Input, InputNumber, message, Select, Switch } from 'antd';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Select,
+  Switch,
+  Spin,
+} from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProduct, getProductById, updateProduct } from '../../../api/productsService';
@@ -12,17 +22,18 @@ const ProductForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const isEdit = !!id;
+  const isEdit = Boolean(id);
 
   useEffect(() => {
-    const fetchBrands = async () => {
+    const fetchInitialData = async () => {
       try {
         const res = await getBrands();
-        const allRecords = res.data?.data?.records || [];
+        const records = res.data?.data?.records || [];
 
         const uniqueBrands = Object.values(
-          allRecords.reduce((acc: any, item: any) => {
+          records.reduce((acc: Record<number, { id: number; name: string }>, item: any) => {
             const brandId = item.brand_id;
             if (!acc[brandId]) {
               acc[brandId] = {
@@ -33,59 +44,71 @@ const ProductForm = () => {
             return acc;
           }, {})
         );
+
         setBrands(uniqueBrands);
+
+        if (isEdit && id) {
+        const res = await getProductById(id);
+        const product = res.data?.data?.records; // Aquí extraemos el objeto correcto
+          form.setFieldsValue({
+            code: product.code,
+            name: product.product_name,         // Aquí el nombre está como "product_name"
+            description: product.description,
+            price: Number(product.price),       // Asegúrate que sea número, ya que viene string
+            brandId: brands.find(b => b.name === product.brand_name)?.id, // Busca la marca por nombre para asignar id
+            isActive: product.is_active === 'Sí', // Convierte "Sí"/"No" a boolean
+          });
+        }
       } catch (error) {
-        message.error('Error al cargar marcas');
+        console.error(error);
+        message.error('Error al cargar datos iniciales');
+      } finally {
+        setInitialLoading(false);
       }
     };
 
-    fetchBrands();
-
-    if (isEdit) {
-      getProductById(id!).then(res => {
-        const data = res.data;
-        form.setFieldsValue({
-          code: data.code,
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          brandId: data.brand_id,
-          isActive: data.is_active,
-        });
-      });
-    }
-  }, [id]);
+    fetchInitialData();
+  }, [id, isEdit, form]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
-
     const payload = {
       code: values.code,
       name: values.name,
       description: values.description,
       price: values.price,
-      brandId: Number(values.brandId), // ✅ Convertimos a número
+      brandId: Number(values.brandId),
       isActive: values.isActive,
     };
 
-    console.log('Payload a enviar:', payload); // 👀 Verificación
-
     try {
-      if (isEdit) {
-        await updateProduct(id!, payload);
-        message.success('Producto actualizado');
+      if (isEdit && id) {
+        await updateProduct(id, payload);
+        message.success('Producto actualizado correctamente');
       } else {
         await createProduct(payload);
-        message.success('Producto creado');
+        message.success('Producto creado correctamente');
       }
       navigate('/products');
-    } catch (err) {
-      console.error('Error en la creación:', err);
-      message.error('Error al guardar producto');
+    } catch (error: any) {
+      console.error(error);
+      if (error?.response?.status === 409) {
+        message.error('Ya existe un producto con ese código');
+      } else {
+        message.error('Error al guardar el producto');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: 50 }}>
+        <Spin tip="Cargando..." />
+      </div>
+    );
+  }
 
   return (
     <Card title={isEdit ? 'Editar Producto' : 'Nuevo Producto'}>
@@ -97,9 +120,15 @@ const ProductForm = () => {
         >
           <Input />
         </Form.Item>
-        <Form.Item label="Nombre" name="name" rules={productValidationRules.name}>
+
+        <Form.Item
+          label="Nombre"
+          name="name"
+          rules={productValidationRules.name}
+        >
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Descripción"
           name="description"
@@ -107,9 +136,15 @@ const ProductForm = () => {
         >
           <Input.TextArea rows={3} />
         </Form.Item>
-        <Form.Item label="Precio" name="price" rules={productValidationRules.price}>
+
+        <Form.Item
+          label="Precio"
+          name="price"
+          rules={productValidationRules.price}
+        >
           <InputNumber min={0} style={{ width: '100%' }} />
         </Form.Item>
+
         <Form.Item
           label="Marca"
           name="brandId"
@@ -123,9 +158,16 @@ const ProductForm = () => {
             placeholder="Seleccione una marca"
           />
         </Form.Item>
-        <Form.Item label="Activo" name="isActive" valuePropName="checked" initialValue={true}>
-          <Switch />
+
+        <Form.Item label="Estado actual">
+          <Form.Item name="isActive" valuePropName="checked" noStyle>
+            <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
+          </Form.Item>
+          <span style={{ marginLeft: 10 }}>
+            {form.getFieldValue('isActive') ? 'Activo' : 'Inactivo'}
+          </span>
         </Form.Item>
+
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
             {isEdit ? 'Actualizar' : 'Crear'}
