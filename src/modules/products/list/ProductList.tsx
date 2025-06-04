@@ -1,72 +1,116 @@
+// src/modules/products/list/ProductList.tsx
 import {
   Button,
-  DatePicker,
   Input,
   Popconfirm,
-  Select,
   Space,
-  Switch,
   Table,
   message,
+  Select,
+  DatePicker,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getProducts, deleteProduct } from '../../../api/productsService';
+import { getBrands } from '../../../api/brandsService';
+import { getSuppliers } from '../../../api/suppliersService';
+import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
-
-interface Filters {
-  search: string;
-  createdStartDate: string;
-  createdEndDate: string;
-  updatedStartDate: string;
-  updatedEndDate: string;
-  isActive?: string;
-  brandIds: string;
-  supplierIds: string;
-}
+const { Option } = Select;
 
 const ProductList = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [brandsOptions, setBrandsOptions] = useState<any[]>([]);
+  const [supplierOptions, setSupplierOptions] = useState<any[]>([]);
 
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState({
     search: '',
-    createdStartDate: '',
-    createdEndDate: '',
-    updatedStartDate: '',
-    updatedEndDate: '',
-    isActive: 'true', // 👈 Mostrar solo productos activos por defecto
-    brandIds: '',
-    supplierIds: '',
+    isActive: undefined as boolean | undefined,
+    dateType: 'created_at' as 'created_at' | 'updated_at' | 'deleted_at',
+    dateRange: [] as any[],
+    brandIds: [] as string[],
+    supplierIds: [] as string[],
   });
 
   const navigate = useNavigate();
 
-  const cleanFilters = (filters: Record<string, any>) => {
-    const cleaned: Record<string, any> = {};
-    for (const key in filters) {
-      const val = filters[key];
-      if (val !== '' && val !== undefined && val !== null) {
-        cleaned[key] = val;
-      }
-    }
-    return cleaned;
-  };
-
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const params = cleanFilters(filters);
+      const params: Record<string, any> = {};
+      if (filters.search) params.search = filters.search;
+      if (filters.isActive !== undefined) {
+        params.isActive = String(filters.isActive); // Convertir a string
+      };
+      if (
+        filters.dateRange.length === 2 &&
+        filters.dateType &&
+        filters.dateRange[0] &&
+        filters.dateRange[1]
+      ) {
+        params.dateType = filters.dateType;
+        params.startDate = filters.dateRange[0].format('YYYY-MM-DD');
+        params.endDate = filters.dateRange[1].format('YYYY-MM-DD');
+      }
+      if (filters.brandIds.length > 0) {
+        params.brandIds = filters.brandIds.join(',');
+      }
+      if (filters.supplierIds.length > 0) {
+        params.supplierIds = filters.supplierIds.join(',');
+      }
+
       const res = await getProducts(params);
-      const records = res?.data?.data?.records;
-      setProducts(Array.isArray(records) ? records : []);
-    } catch (err) {
-      console.error('Error al obtener productos:', err);
-      message.error('Error al cargar productos');
-      setProducts([]);
+      const records = res.data?.data?.records || [];
+
+      const uniqueProducts = Object.values(
+        records.reduce((acc: any, item: any) => {
+          const id = item.product_id;
+          if (!acc[id]) {
+            acc[id] = item;
+          }
+          return acc;
+        }, {})
+      );
+
+      setProducts(uniqueProducts);
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Error al cargar productos';
+      message.error(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBrandsAndSuppliers = async () => {
+    try {
+      const [brandsRes, suppliersRes] = await Promise.all([
+        getBrands({}),
+        getSuppliers({}),
+      ]);
+      const brandRecords = brandsRes.data?.data?.records || [];
+      const supplierRecords = suppliersRes.data?.data?.records || [];
+
+      const uniqueBrands = Array.from(
+      new Map(brandRecords.map((b: any) => [b.brand_id, b])).values()
+      );
+      setBrandsOptions(
+        uniqueBrands.map((b: any) => ({
+          label: b.brand_name,
+          value: b.brand_id,
+        }))
+      );
+
+
+      setSupplierOptions(
+        supplierRecords.map((s: any) => ({
+          label: s.name,
+          value: s.id,
+        }))
+      );
+    } catch (err) {
+      message.warning('Error al cargar marcas o proveedores');
     }
   };
 
@@ -74,51 +118,29 @@ const ProductList = () => {
     try {
       await deleteProduct(id);
       message.success('Producto eliminado');
-      fetchProducts(); // 👈 Volver a cargar la lista con los filtros actuales
-    } catch {
-      message.error('Error al eliminar');
+      fetchProducts();
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Error al eliminar producto';
+      message.error(msg);
     }
   };
 
+  const handleResetFilters = () => {
+    setFilters({
+      search: '',
+      isActive: undefined,
+      dateType: 'created_at',
+      dateRange: [],
+      brandIds: [],
+      supplierIds: [],
+    });
+    fetchProducts();
+  };
+
   useEffect(() => {
+    fetchBrandsAndSuppliers();
     fetchProducts();
   }, []);
-
-  const handleSearchChange = (e: any) => {
-    setFilters({ ...filters, search: e.target.value });
-  };
-
-  const handleCreatedDateChange = (_: any, dateStrings: [string, string]) => {
-    setFilters({
-      ...filters,
-      createdStartDate: dateStrings[0],
-      createdEndDate: dateStrings[1],
-    });
-  };
-
-  const handleUpdatedDateChange = (_: any, dateStrings: [string, string]) => {
-    setFilters({
-      ...filters,
-      updatedStartDate: dateStrings[0],
-      updatedEndDate: dateStrings[1],
-    });
-  };
-
-  const handleActiveChange = (checked: boolean) => {
-    setFilters({ ...filters, isActive: String(checked) });
-  };
-
-  const handleBrandChange = (value: string[]) => {
-    setFilters({ ...filters, brandIds: value.join(',') });
-  };
-
-  const handleSupplierChange = (value: string[]) => {
-    setFilters({ ...filters, supplierIds: value.join(',') });
-  };
-
-  const handleSearch = () => {
-    fetchProducts();
-  };
 
   const columns = [
     { title: 'ID', dataIndex: 'product_id', key: 'product_id' },
@@ -132,7 +154,6 @@ const ProductList = () => {
         new Intl.NumberFormat('es-MX', {
           style: 'currency',
           currency: 'MXN',
-          minimumFractionDigits: 2,
         }).format(price),
     },
     { title: 'Marca', dataIndex: 'brand_name', key: 'brand_name' },
@@ -141,7 +162,9 @@ const ProductList = () => {
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <Button onClick={() => navigate(`/products/edit/${record.product_id}`)}>Editar</Button>
+          <Button onClick={() => navigate(`/products/edit/${record.product_id}`)}>
+            Editar
+          </Button>
           <Popconfirm
             title="¿Seguro que deseas eliminar?"
             onConfirm={() => handleDelete(record.product_id)}
@@ -155,46 +178,65 @@ const ProductList = () => {
 
   return (
     <div>
-      <Space direction="vertical" style={{ marginBottom: 16, width: '100%' }}>
+      <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
         <Space wrap>
           <Input
             placeholder="Buscar productos"
             value={filters.search}
-            onChange={handleSearchChange}
-            style={{ width: 200 }}
-          />
-          <RangePicker onChange={handleCreatedDateChange} placeholder={['Creado desde', 'hasta']} />
-          <RangePicker onChange={handleUpdatedDateChange} placeholder={['Actualizado desde', 'hasta']} />
-          <Select
-            mode="multiple"
-            style={{ width: 150 }}
-            placeholder="Marcas"
-            onChange={handleBrandChange}
-            options={[
-              { label: 'Marca 1', value: '1' },
-              { label: 'Marca 2', value: '2' },
-            ]}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           />
           <Select
-            mode="multiple"
+            placeholder="¿Activo?"
+            value={filters.isActive}
+            onChange={(value) => setFilters({ ...filters, isActive: value })}
+            allowClear
+            style={{ width: 120 }}
+          >
+            <Option value={true}>Sí</Option>
+            <Option value={false}>No</Option>
+          </Select>
+          <Select
+            placeholder="Tipo de fecha"
+            value={filters.dateType}
+            onChange={(value) => setFilters({ ...filters, dateType: value })}
             style={{ width: 150 }}
-            placeholder="Proveedores"
-            onChange={handleSupplierChange}
-            options={[
-              { label: 'Proveedor 1', value: '5' },
-              { label: 'Proveedor 2', value: '9' },
-            ]}
+          >
+            <Option value="created_at">Creación</Option>
+            <Option value="updated_at">Actualización</Option>
+            <Option value="deleted_at">Eliminación</Option>
+          </Select>
+          <RangePicker
+            placeholder={['Fecha inicial', 'Fecha final']}
+            value={filters.dateRange}
+            onChange={(dates) => setFilters({ ...filters, dateRange: dates || [] })}
           />
-          <span>Activo:</span>
-          <Switch
-            onChange={handleActiveChange}
-            checked={filters.isActive !== 'false'} // 👈 reflejar el estado actual
+          <Select
+            mode="multiple"
+            placeholder="Filtrar por marcas"
+            value={filters.brandIds}
+            onChange={(value) => setFilters({ ...filters, brandIds: value })}
+            options={brandsOptions}
+            style={{ minWidth: 200 }}
           />
-          <Button type="primary" onClick={handleSearch}>Buscar</Button>
+          <Select
+            mode="multiple"
+            placeholder="Filtrar por proveedores"
+            value={filters.supplierIds}
+            onChange={(value) => setFilters({ ...filters, supplierIds: value })}
+            options={supplierOptions}
+            style={{ minWidth: 200 }}
+          />
         </Space>
-        <Button type="primary" onClick={() => navigate('/products/form')}>
-          Nuevo Producto
-        </Button>
+
+        <Space wrap>
+          <Button type="primary" onClick={fetchProducts}>
+            Buscar
+          </Button>
+          <Button onClick={handleResetFilters}>Limpiar filtros</Button>
+          <Button type="primary" onClick={() => navigate('/products/form')}>
+            Nuevo Producto
+          </Button>
+        </Space>
       </Space>
 
       <Table

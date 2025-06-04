@@ -1,38 +1,69 @@
 import { Button, Popconfirm, Space, Table, message } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  getFilteredBrandSuppliers,
+  deleteBrandSupplier,
+} from '../../../api/brandSupplierService';
 
-const mockBrandSuppliers = [
-  { id: 1, brandName: 'Microsoft', supplierName: 'Ingram Micro' },
-  { id: 2, brandName: 'Apple', supplierName: 'Tech Data' },
-  { id: 3, brandName: 'Samsung', supplierName: 'Synnex' },
-  { id: 4, brandName: 'Sony', supplierName: 'Arrow Electronics' },
-  { id: 5, brandName: 'LG', supplierName: 'Avnet' },
-];
+interface BrandSupplier {
+  id: number;
+  brandName: string;
+  supplierName: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const BrandSupplierList = () => {
-  const [data, setData] = useState(mockBrandSuppliers);
+  const [data, setData] = useState<BrandSupplier[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleDelete = (id: number) => {
-    // Solo simulamos la eliminación en mock
-    setData((prev) => prev.filter((item) => item.id !== id));
-    message.success('Relación eliminada');
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await getFilteredBrandSuppliers({
+        // Puedes ajustar estos valores para los filtros reales del frontend
+        startDate: '2024-01-01',
+        endDate: '2025-12-31',
+        dateType: 'created_at',
+      });
+      const records = response.data?.data?.records || [];
+      setData(records);
+    } catch (error) {
+      message.error('Error al cargar los datos');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteBrandSupplier(id.toString());
+      message.success('Relación eliminada');
+      fetchData(); // refresca la lista
+    } catch (error) {
+      message.error('No se pudo eliminar');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const columns = [
     {
       title: 'Marca',
-      dataIndex: 'brandName',
+      dataIndex: 'brand_name',
     },
     {
       title: 'Proveedor',
-      dataIndex: 'supplierName',
+      dataIndex: 'supplier_name',
     },
     {
       title: 'Acciones',
-      render: (_: any, record: any) => (
+      render: (_: any, record: BrandSupplier) => (
         <Space>
           <Button onClick={() => navigate(`/brand-suppliers/edit/${record.id}`)}>
             Editar
@@ -57,7 +88,13 @@ const BrandSupplierList = () => {
       >
         Nueva Relación
       </Button>
-      <Table columns={columns} dataSource={data} rowKey="id" loading={loading} />
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowKey="id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
     </div>
   );
 };

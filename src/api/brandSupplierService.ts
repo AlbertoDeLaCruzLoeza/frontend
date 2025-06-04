@@ -1,6 +1,47 @@
 // src/api/brandSupplierService.ts
 import axios from './axiosInstance';
 
+// Helper para limpiar filtros vacíos o innecesarios
+const cleanFilters = (filters: Record<string, any>): Record<string, any> => {
+  const cleaned: Record<string, any> = {};
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== '' &&
+      !(Array.isArray(value) && value.length === 0)
+    ) {
+      cleaned[key] = value;
+    }
+  });
+
+  return cleaned;
+};
+
+interface FilterParams {
+  search?: string;
+  brandIds?: number[];
+  isActive?: boolean;
+  dateType?: 'created_at' | 'updated_at' | 'deleted_at';
+  startDate?: string;
+  endDate?: string;
+}
+
+// GET con filtros avanzados
+export const getFilteredBrandSuppliers = (filters: FilterParams) => {
+  const { dateType, startDate, endDate, ...rest } = filters;
+
+  const params: Record<string, any> = cleanFilters(rest);
+
+  if (dateType && startDate && endDate) {
+    params.dateFilter = JSON.stringify({ dateType, startDate, endDate });
+  }
+
+  return axios.get('/brand-suppliers', { params });
+};
+
+// CRUD estándar
 export const getBrandSuppliers = () => axios.get('/brand-suppliers');
 export const getBrandSupplierById = (id: string) => axios.get(`/brand-suppliers/${id}`);
 export const createBrandSupplier = (data: any) => axios.post('/brand-suppliers', data);

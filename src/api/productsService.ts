@@ -4,20 +4,23 @@ import axios from './axiosInstance';
 // Tipos de filtros para productos
 export type RawFilters = {
   search?: string;
-  createdStartDate?: string;
-  createdEndDate?: string;
-  updatedStartDate?: string;
-  updatedEndDate?: string;
-  deletedStartDate?: string;
-  deletedEndDate?: string;
+  dateType?: 'created_at' | 'updated_at' | 'deleted_at';
+  startDate?: string;
+  endDate?: string;
   isActive?: string;
   brandIds?: string;
   supplierIds?: string;
 };
 
+
 // Limpia los filtros vacíos
-const cleanFilters = (obj: Record<string, any>) =>
-  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
+const cleanFilters = (obj: Record<string, any>) => {
+  const filtered = Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+  );
+  console.log('Params después de cleanFilters:', filtered);
+  return filtered;
+};
 
 // Transforma filtros en parámetros aceptados por el backend
 const transformFilters = (filters: RawFilters): Record<string, any> => {
@@ -26,15 +29,11 @@ const transformFilters = (filters: RawFilters): Record<string, any> => {
     isActive,
     brandIds,
     supplierIds,
-    createdStartDate,
-    createdEndDate,
-    updatedStartDate,
-    updatedEndDate,
-    deletedStartDate,
-    deletedEndDate,
+    dateType,
+    startDate,
+    endDate,
   } = filters;
 
-  const today = new Date();
   const params: Record<string, any> = {};
 
   if (search) params.search = search;
@@ -45,36 +44,30 @@ const transformFilters = (filters: RawFilters): Record<string, any> => {
   if (supplierIds) params.supplierIds = supplierIds;
 
   // Filtros por fechas
-  const dateFilters = [
-    { type: 'created_at', start: createdStartDate, end: createdEndDate },
-    { type: 'updated_at', start: updatedStartDate, end: updatedEndDate },
-    { type: 'deleted_at', start: deletedStartDate, end: deletedEndDate },
-  ];
+  if (dateType && startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
 
-  const selected = dateFilters.find(f => f.start || f.end);
+    if (start > end) throw new Error('La fecha de inicio no puede ser mayor que la fecha final.');
+    if (end > today) throw new Error('La fecha final no puede ser una fecha futura.');
 
-  if (selected) {
-    const { type, start, end } = selected;
-
-    if (!(start && end)) throw new Error(`Debe especificar ambas fechas para el filtro de ${type}`);
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    if (startDate > endDate) throw new Error('La fecha de inicio no puede ser mayor que la fecha final.');
-    if (endDate > today) throw new Error('La fecha final no puede ser una fecha futura.');
-
-    params.dateType = type;
-    params.startDate = start;
-    params.endDate = end;
+    params.dateType = dateType;
+    params.startDate = start.toISOString().slice(0, 10);
+    params.endDate = end.toISOString().slice(0, 10);
   }
 
-  return cleanFilters(params);
-};
+console.log('Params antes de cleanFilters:', params);
+return cleanFilters(params);
 
+}
 // --- Peticiones al backend ---
 
 export const getProducts = (filters: RawFilters = {}) => {
+  console.log('Filtros originales:', filters);
   const params = transformFilters(filters);
+  console.log('Parámetros enviados:', params);
+
   return axios.get('/products', { params });
 };
 
