@@ -10,7 +10,7 @@ import {
   DatePicker,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { getProducts, deleteProduct } from '../../../api/productsService';
+import { getProducts, deleteProduct, reactivateProduct } from '../../../api/productsService';
 import { getBrands } from '../../../api/brandsService';
 import { getSuppliers } from '../../../api/suppliersService';
 import { useNavigate } from 'react-router-dom';
@@ -70,7 +70,13 @@ const ProductList = () => {
       for (const item of records) {
         if (!seen.has(item.product_id)) {
           seen.add(item.product_id);
-          uniqueProducts.push(item);
+          uniqueProducts.push({
+            ...item,
+            is_active: item.product_is_active
+              ?.toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '') === 'si',
+          });
         }
       }
 
@@ -130,6 +136,19 @@ const ProductList = () => {
     }
   };
 
+  const handleReactivate = async (id: string) => {
+  try {
+    await reactivateProduct(id);
+    message.success('Producto reactivado');
+    fetchProducts(); // refrescar lista
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Error al reactivar producto';
+    message.error(msg);
+  }
+};
+
+
+
   const handleResetFilters = () => {
     setFilters({
       search: '',
@@ -170,12 +189,18 @@ const ProductList = () => {
           <Button onClick={() => navigate(`/products/edit/${record.product_id}`)}>
             Editar
           </Button>
-          <Popconfirm
-            title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.product_id)}
-          >
-            <Button danger>Eliminar</Button>
-          </Popconfirm>
+          {record.is_active ? (
+            <Popconfirm
+              title="¿Seguro que deseas eliminar?"
+              onConfirm={() => handleDelete(record.product_id)}
+            >
+              <Button danger>Eliminar</Button>
+            </Popconfirm>
+          ) : (
+            <Button type="default" onClick={() => handleReactivate(record.product_id)}>
+              Reactivar
+            </Button>
+          )}
         </Space>
       ),
     },

@@ -82,3 +82,7 @@ export const updateProduct = (id: string | number, data: any) =>
 
 export const deleteProduct = (id: string | number) =>
   axios.delete(`/products/${id}`); // ID en la ruta como espera Swagger
+
+export const reactivateProduct = (id: string) => {
+  return axios.patch(`/products/${id}/activate`);
+};
