@@ -10,7 +10,7 @@ import {
   DatePicker,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { getBrands, deleteBrand } from '../../../api/brandsService';
+import { getBrands, deleteBrand, reactivateBrand } from '../../../api/brandsService';
 import { getSuppliers } from '../../../api/suppliersService';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,7 +58,7 @@ const BrandList = () => {
       }
 
       const res = await getBrands(params);
-      const allRecords = res.data?.data?.records || [];
+      const allRecords = (res.data?.data?.records as any[]) || [];
 
       const uniqueBrands = Object.values(
         allRecords.reduce((acc: any, item: any) => {
@@ -68,7 +68,7 @@ const BrandList = () => {
               id: brandId,
               name: item.brand_name || item.name,
               description: item.description,
-              isActive: item.is_active ?? true,
+              isActive: item.is_active === true || item.is_active === 'Sí',
             };
           }
           return acc;
@@ -95,6 +95,18 @@ const BrandList = () => {
     }
   };
 
+  const handleReactivate = async (id: number) => {
+  try {
+    await reactivateBrand(String(id)); // Esta función deberías tenerla en tu brandsService
+    message.success('Marca reactivada');
+    fetchBrands();
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Error al reactivar marca';
+    message.error(msg);
+  }
+};
+
+
   const handleCreate = () => {
     navigate('/brands/form');
   };
@@ -103,7 +115,6 @@ const BrandList = () => {
     setFilters(defaultFilters);
   };
 
-  // 🔄 Actualizar marcas cada vez que cambian los filtros
   useEffect(() => {
     fetchBrands();
   }, [filters]);
@@ -126,13 +137,22 @@ const BrandList = () => {
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <Button onClick={() => navigate(`/brands/edit/${record.id}`)}>Editar</Button>
-          <Popconfirm
-            title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button danger>Eliminar</Button>
-          </Popconfirm>
+          <Button onClick={() => navigate(/brands/edit/${record.id})}>Editar</Button>
+          {record.isActive ? (
+            <Popconfirm
+              title="¿Seguro que deseas eliminar?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button danger>Eliminar</Button>
+            </Popconfirm>
+          ) : (
+            <Popconfirm
+              title="¿Seguro que deseas reactivar?"
+              onConfirm={() => handleReactivate(record.id)}
+            >
+              <Button type="primary">Reactivar</Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },

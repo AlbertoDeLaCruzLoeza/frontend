@@ -7,19 +7,24 @@ export interface Brand {
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
+  supplier_id?: number;
+  supplier_name?: string;
 }
 
 export const getBrands = (params: Record<string, any> = {}) =>
   axios.get<{ data: { records: Brand[]; total_count: number } }>('/brands', { params });
 
 export const getBrandById = (id: string) =>
-  axios.get<{ data: Brand }>(`/brands/${id}`);
+  axios.get<{ data: Brand }>(/brands/${id});
 
 export const createBrand = (data: Omit<Brand, 'brandId' | 'createdAt' | 'updatedAt'>) =>
   axios.post<{ data: Brand }>('/brands', data);
 
 export const updateBrand = (id: string | number, data: Omit<Brand, 'brandId' | 'createdAt' | 'updatedAt'>) =>
-  axios.put<{ data: Brand }>(`/brands/${id}`, data);
+  axios.put<{ data: Brand }>(/brands/${id}, data);
 
 export const deleteBrand = (id: string) =>
-  axios.delete(`/brands/${id}`);
+  axios.delete(/brands/${id});
+
+export const reactivateBrand = (id: string) =>
+  axios.patch(/brands/${id}/activate);
