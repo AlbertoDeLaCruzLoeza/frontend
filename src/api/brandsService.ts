@@ -24,7 +24,14 @@ export const updateBrand = (id: string | number, data: Omit<Brand, 'brandId' | '
   axios.put<{ data: Brand }>(/brands/${id}, data);
 
 export const deleteBrand = (id: string) =>
+<<<<<<< HEAD
   axios.delete(/brands/${id});
 
 export const reactivateBrand = (id: string) =>
   axios.patch(/brands/${id}/activate);
+=======
+  axios.delete(`/brands/${id}`);
+
+export const reactivateBrand = (id: string) =>
+  axios.patch(`/brands/${id}/activate`);
+>>>>>>> 6fe76cf2c9bcb38f2bddd8474e225a6cd1bed43a

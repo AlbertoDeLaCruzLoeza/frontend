@@ -7,12 +7,11 @@ import {
   Select,
   Space,
   Table,
-  Tag,
   message,
   Popconfirm,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { deleteUser, getUsers } from '../../../api/usersService';
+import { deleteUser, getUsers, reactivateUser } from '../../../api/usersService'; // Asumo que tienes reactivateUser
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -25,18 +24,17 @@ const UserList = () => {
   const navigate = useNavigate();
 
   const fetchUsers = async (filters = {}) => {
-  setLoading(true);
-  try {
-    const res = await getUsers(filters);
-    const records = res.data.data.records || [];
-    setUsers(records);
-  } catch {
-    message.error('Error al cargar usuarios');
-  } finally {
-    setLoading(false);
-  }
-};
-
+    setLoading(true);
+    try {
+      const res = await getUsers(filters);
+      const records = res.data.data.records || [];
+      setUsers(records);
+    } catch {
+      message.error('Error al cargar usuarios');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchUsers(); // carga inicial sin filtros
@@ -52,12 +50,28 @@ const UserList = () => {
     }
   };
 
+  const handleReactivate = async (id: string) => {
+    try {
+      await reactivateUser(id);
+      message.success('Usuario reactivado');
+      fetchUsers();
+    } catch {
+      message.error('Error al reactivar');
+    }
+  };
+
   const onFinish = (values: any) => {
     const { email, is_active, dateType, dateRange } = values;
     const filters: any = {};
 
     if (email) filters.email = email;
-    if (is_active !== undefined) filters.isActive = is_active;
+    if (is_active !== undefined) {
+      if (is_active === 'pending') {
+        filters.pending = true; // Nuevo filtro que tú defines
+      } else {
+        filters.isActive = is_active;
+      }
+    }
     if (dateType && dateRange?.length === 2) {
       filters.dateType = dateType;
       filters.startDate = dayjs(dateRange[0]).format('YYYY-MM-DD');
@@ -67,10 +81,15 @@ const UserList = () => {
     fetchUsers(filters);
   };
 
+  const onReset = () => {
+    form.resetFields();
+    fetchUsers();
+  };
+
   const columns = [
     {
       title: 'Usuario ID',
-      dataIndex: 'user_id'
+      dataIndex: 'user_id',
     },
     {
       title: 'Correo',
@@ -80,8 +99,15 @@ const UserList = () => {
     {
       title: 'Estado',
       dataIndex: 'is_active',
-      render: (text: string) => {
-        const isActive = text === 'Sí';
+      render: (_: any, record: any) => {
+        const isPendingActivation =
+          record.activation_token && !record.activated_at && !record.deleted_at;
+        const isActive = record.is_active === true || record.is_active === 'true' || record.is_active === 'Sí';
+
+        if (isPendingActivation) {
+          return <span style={{ color: 'orange' }}>Pendiente de activación</span>;
+        }
+
         return isActive ? (
           <span style={{ color: 'green' }}>Activo</span>
         ) : (
@@ -92,16 +118,34 @@ const UserList = () => {
     {
       title: 'Acciones',
       key: 'acciones',
-      render: (_: any, record: any) => (
-        <Space>
-          <Popconfirm
-            title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.user_id)}
-          >
-            <Button danger>Eliminar</Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_: any, record: any) => {
+        const notActivated =
+          record.activation_token && !record.activated_at && !record.deleted_at;
+        const deleted = !!record.deleted_at;
+
+        return (
+          <Space>
+            <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
+              Editar
+            </Button>
+
+            {!deleted && (
+              <Popconfirm
+                title="¿Seguro que deseas eliminar?"
+                onConfirm={() => handleDelete(record.user_id)}
+              >
+                <Button danger>Eliminar</Button>
+              </Popconfirm>
+            )}
+
+            {deleted && (
+              <Button type="default" onClick={() => handleReactivate(record.user_id)}>
+                Reactivar
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -118,9 +162,10 @@ const UserList = () => {
         </Form.Item>
 
         <Form.Item name="is_active">
-          <Select placeholder="Estado" allowClear style={{ width: 120 }}>
-            <Select.Option value="true">Activo</Select.Option>
-            <Select.Option value="false">Inactivo</Select.Option>
+          <Select placeholder="Estado" allowClear style={{ width: 150 }}>
+            <Select.Option value={true}>Activo</Select.Option>
+            <Select.Option value={false}>Inactivo</Select.Option>
+            <Select.Option value="pending">Pendiente de activación</Select.Option>
           </Select>
         </Form.Item>
 
@@ -137,9 +182,15 @@ const UserList = () => {
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Filtrar
-          </Button>
+          <Space>
+            <Button type="primary" htmlType="submit">
+              Filtrar
+            </Button>
+            <Button onClick={onReset}>Limpiar filtros</Button>
+            <Button type="dashed" onClick={() => navigate('/users/form')}>
+              Crear usuario nuevo
+            </Button>
+          </Space>
         </Form.Item>
       </Form>
 

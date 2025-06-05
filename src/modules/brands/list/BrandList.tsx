@@ -137,7 +137,11 @@ const BrandList = () => {
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
+<<<<<<< HEAD
           <Button onClick={() => navigate(/brands/edit/${record.id})}>Editar</Button>
+=======
+          <Button onClick={() => navigate(`/brands/edit/${record.id}`)}>Editar</Button>
+>>>>>>> 6fe76cf2c9bcb38f2bddd8474e225a6cd1bed43a
           {record.isActive ? (
             <Popconfirm
               title="¿Seguro que deseas eliminar?"
