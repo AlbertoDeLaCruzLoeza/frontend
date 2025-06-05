@@ -168,6 +168,7 @@ const BrandSupplierList = () => {
       title: '¿Activo?',
       dataIndex: 'supplier_is_active',
       key: 'supplier_is_active',
+      render: (value: boolean) => (value ? 'Sí' : 'No'),
     },
     {
       title: 'Acciones',

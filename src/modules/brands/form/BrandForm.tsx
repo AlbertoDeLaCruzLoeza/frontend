@@ -9,14 +9,24 @@ const BrandForm = () => {
   const { id } = useParams();
   const navigate = useNavigate(); 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   const isEdit = !!id;
 
   useEffect(() => {
     if (isEdit) {
-      getBrandById(id!).then(res => {
-        form.setFieldsValue(res.data);
-      });
+      setFetching(true);
+      getBrandById(id!)
+        .then((res) => {
+          form.setFieldsValue(res.data?.data?.records);
+        })
+        .catch(() => {
+          message.error('Error al cargar datos de la marca');
+          navigate('/brands'); // Si hay error, redirige
+        })
+        .finally(() => {
+          setFetching(false);
+        });
     }
   }, [id]);
 
@@ -38,23 +48,30 @@ const BrandForm = () => {
     }
   };
 
+  const handleCancel = () => {
+    navigate('/brands');
+  };
+
   return (
     <Form layout="vertical" form={form} onFinish={onFinish}>
       <Form.Item name="name" label="Nombre" rules={brandValidationRules.name}>
-        <Input />
+        <Input disabled={fetching} />
       </Form.Item>
 
       <Form.Item name="description" label="Descripción" rules={brandValidationRules.description}>
-        <Input.TextArea rows={4} />
+        <Input.TextArea rows={4} disabled={fetching} />
       </Form.Item>
 
       <Form.Item name="isActive" label="¿Está activa?" valuePropName="checked">
-        <Switch />
+        <Switch disabled={fetching} />
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading}>
+        <Button type="primary" htmlType="submit" loading={loading} disabled={fetching}>
           {isEdit ? 'Actualizar' : 'Crear'}
+        </Button>
+        <Button style={{ marginLeft: 8 }} onClick={handleCancel} disabled={loading || fetching}>
+          Cancelar
         </Button>
       </Form.Item>
     </Form>

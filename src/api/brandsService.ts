@@ -7,6 +7,8 @@ export interface Brand {
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
+  supplier_id?: number;
+  supplier_name?: string;
 }
 
 export const getBrands = (params: Record<string, any> = {}) =>
@@ -23,3 +25,6 @@ export const updateBrand = (id: string | number, data: Omit<Brand, 'brandId' | '
 
 export const deleteBrand = (id: string) =>
   axios.delete(`/brands/${id}`);
+
+export const reactivateBrand = (id: string) =>
+  axios.patch(`/brands/${id}/activate`);
