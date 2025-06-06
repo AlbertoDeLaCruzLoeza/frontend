@@ -159,7 +159,9 @@ const MainLayout = () => {
           style={{ padding: 24,
                         background: '#fff',
                         height: 'calc(100vh - 112px)', // Ajuste para Header (64px) + Breadcrumb (48px)
-                        overflowY: 'auto' }}
+                        overflowY: 'auto',
+                        overflowX: 'auto',
+                        minWidth: 0, }}
           >
             <Routes>
               <Route path="/home" element={<Home />} />

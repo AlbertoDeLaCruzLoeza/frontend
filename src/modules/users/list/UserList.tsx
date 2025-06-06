@@ -78,6 +78,8 @@ const UserList = () => {
       filters.endDate = dayjs(dateRange[1]).format('YYYY-MM-DD');
     }
 
+    console.log('Filtros enviados:', filters);
+
     fetchUsers(filters);
   };
 
@@ -105,7 +107,7 @@ const UserList = () => {
         const isActive = record.is_active === true || record.is_active === 'true' || record.is_active === 'Sí';
 
         if (isPendingActivation) {
-          return <span style={{ color: 'orange' }}>Pendiente de activación</span>;
+          return <span style={{ color: 'orange' }}>Inactivo (Pendiente de activar)</span>;
         }
 
         return isActive ? (
@@ -116,48 +118,36 @@ const UserList = () => {
       },
     },
     {
-      title: 'Acciones',
-      key: 'acciones',
-      render: (_: any, record: any) => {
-        const notActivated =
-          record.activation_token && !record.activated_at && !record.deleted_at;
-        const deleted = !!record.deleted_at;
+  title: 'Acciones',
+  key: 'acciones',
+  render: (_: any, record: any) => {
+    const isPendingActivation =
+      record.activation_token && !record.activated_at && !record.deleted_at;
+    const isDeleted = !!record.deleted_at;
 
-        if (notActivated) {
-          return (
-            <Popconfirm
-              title="¿Seguro que deseas eliminar?"
-              onConfirm={() => handleDelete(record.user_id)}
-            >
-              <Button danger>Eliminar</Button>
-            </Popconfirm>
-          );
-        }
+    return (
+      <Space>
+        <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
+          Editar
+        </Button>
 
-        return (
-          <Space>
-            <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
-              Editar
-            </Button>
+        {isPendingActivation ? null : isDeleted ? (
+          <Button type="default" onClick={() => handleReactivate(record.user_id)}>
+            Reactivar
+          </Button>
+        ) : (
+          <Popconfirm
+            title="¿Seguro que deseas eliminar?"
+            onConfirm={() => handleDelete(record.user_id)}
+          >
+            <Button danger>Eliminar</Button>
+          </Popconfirm>
+        )}
+      </Space>
+    );
+  },
+},
 
-            {!deleted && (
-              <Popconfirm
-                title="¿Seguro que deseas eliminar?"
-                onConfirm={() => handleDelete(record.user_id)}
-              >
-                <Button danger>Eliminar</Button>
-              </Popconfirm>
-            )}
-
-            {deleted && (
-              <Button type="default" onClick={() => handleReactivate(record.user_id)}>
-                Reactivar
-              </Button>
-            )}
-          </Space>
-        );
-      },
-    },
   ];
 
   return (
