@@ -11,7 +11,7 @@ import {
   Popconfirm,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { deleteUser, getUsers, reactivateUser } from '../../../api/usersService'; // Asumo que tienes reactivateUser
+import { deleteUser, getUsers, reactivateUser } from '../../../api/usersService'; 
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -67,7 +67,7 @@ const UserList = () => {
     if (email) filters.email = email;
     if (is_active !== undefined) {
       if (is_active === 'pending') {
-        filters.pending = true; // Nuevo filtro que tú defines
+        filters.pending = true;
       } else {
         filters.isActive = is_active;
       }
@@ -116,49 +116,48 @@ const UserList = () => {
       },
     },
     {
-  title: 'Acciones',
-  key: 'acciones',
-  render: (_: any, record: any) => {
-    const notActivated =
-      record.activation_token && !record.activated_at && !record.deleted_at;
-    const deleted = !!record.deleted_at;
+      title: 'Acciones',
+      key: 'acciones',
+      render: (_: any, record: any) => {
+        const notActivated =
+          record.activation_token && !record.activated_at && !record.deleted_at;
+        const deleted = !!record.deleted_at;
 
-    // Si está pendiente de activación, solo mostrar eliminar
-    if (notActivated) {
-      return (
-        <Popconfirm
-          title="¿Seguro que deseas eliminar?"
-          onConfirm={() => handleDelete(record.user_id)}
-        >
-          <Button danger>Eliminar</Button>
-        </Popconfirm>
-      );
-    }
+        if (notActivated) {
+          return (
+            <Popconfirm
+              title="¿Seguro que deseas eliminar?"
+              onConfirm={() => handleDelete(record.user_id)}
+            >
+              <Button danger>Eliminar</Button>
+            </Popconfirm>
+          );
+        }
 
-    return (
-      <Space>
-        <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
-          Editar
-        </Button>
+        return (
+          <Space>
+            <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
+              Editar
+            </Button>
 
-        {!deleted && (
-          <Popconfirm
-            title="¿Seguro que deseas eliminar?"
-            onConfirm={() => handleDelete(record.user_id)}
-          >
-            <Button danger>Eliminar</Button>
-          </Popconfirm>
-        )}
+            {!deleted && (
+              <Popconfirm
+                title="¿Seguro que deseas eliminar?"
+                onConfirm={() => handleDelete(record.user_id)}
+              >
+                <Button danger>Eliminar</Button>
+              </Popconfirm>
+            )}
 
-        {deleted && (
-          <Button type="default" onClick={() => handleReactivate(record.user_id)}>
-            Reactivar
-          </Button>
-        )}
-      </Space>
-    );
-  },
-},
+            {deleted && (
+              <Button type="default" onClick={() => handleReactivate(record.user_id)}>
+                Reactivar
+              </Button>
+            )}
+          </Space>
+        );
+      },
+    },
   ];
 
   return (
@@ -189,8 +188,32 @@ const UserList = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item name="dateRange">
-          <RangePicker />
+        <Form.Item
+          name="dateRange"
+          rules={[
+            {
+              validator: (_, value) => {
+                if (!value || value.length !== 2) return Promise.resolve();
+
+                const [start, end] = value;
+                const today = dayjs().endOf('day');
+
+                if (start && start.isAfter(today)) {
+                  return Promise.reject(new Error('La fecha inicial no puede ser futura'));
+                }
+
+                if (end && end.isAfter(today)) {
+                  return Promise.reject(new Error('La fecha final no puede ser futura'));
+                }
+
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <RangePicker
+            disabledDate={(current) => current && current > dayjs().endOf('day')}
+          />
         </Form.Item>
 
         <Form.Item>
