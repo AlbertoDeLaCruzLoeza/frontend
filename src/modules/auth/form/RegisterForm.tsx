@@ -88,6 +88,7 @@ const RegisterForm = () => {
 
           <Form.Item>
             <ReCAPTCHA
+            ref={recaptchaRef}
             sitekey={siteKey}
             onChange={(token) => {
               console.log('reCAPTCHA token generado:', token);

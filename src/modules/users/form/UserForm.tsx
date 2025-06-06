@@ -1,5 +1,4 @@
-// src/modules/users/form/UserForm.tsx
-import { Button, Form, Input, message } from 'antd';
+import { Button, Form, Input, Switch, message, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import { createUser, getUserById, updateUser } from '../../../api/usersService';
 import { userValidationRules } from '../validate/userRules';
@@ -10,30 +9,74 @@ const UserForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
   const isEdit = !!id;
 
   useEffect(() => {
-    if (isEdit) {
-      getUserById(id!).then(res => {
-        form.setFieldsValue(res.data);
+  if (isEdit && id) {
+    getUserById(id)
+      .then(res => {
+        const records = res.data?.data?.records;
+        const userData = Array.isArray(records) ? records[0] : records;
+
+        if (!userData) {
+          message.error('No se encontró el usuario');
+          return;
+        }
+
+        form.setFieldsValue({
+          email: userData.email,
+          is_active: userData.is_active === 'Sí',
+        });
+      })
+      .catch(err => {
+        console.error('Error al cargar el usuario', err);
+        message.error('Error al cargar los datos del usuario');
       });
-    }
-  }, [id]);
+  }
+}, [id]);
+
+
+  // Definimos reglas para la contraseña dependiendo si es edición o creación
+  const passwordRules = isEdit
+    ? [ // Opcional en edición, pero si hay valor debe cumplir las reglas
+        {
+          validator(_, value) {
+            if (!value) return Promise.resolve();
+            return userValidationRules.password[0].validator(_, value);
+          }
+        }
+      ]
+    : userValidationRules.password; // Obligatorio en creación
 
   const onFinish = async (values: any) => {
     setLoading(true);
+
+    const payload: any = {
+      email: values.email,
+      is_active: values.is_active ?? false,
+    };
+
+    if (isEdit) {
+      // Solo incluir password_hash si se modificó la contraseña
+      if (values.password && values.password.trim() !== '') {
+        payload.password_hash = values.password;
+      }
+    } else {
+      payload.password_hash = values.password;
+    }
+
     try {
       if (isEdit) {
-        await updateUser(id!, values);
+        await updateUser(id!, payload);
         message.success('Usuario actualizado');
       } else {
-        await createUser(values);
+        await createUser(payload);
         message.success('Usuario creado');
       }
       navigate('/users');
-    } catch {
-      message.error('Error al guardar, porfavor ingrese los datos de forma correcta');
+    } catch (err) {
+      console.error(err);
+      message.error('Error al guardar, por favor ingrese los datos de forma correcta');
     } finally {
       setLoading(false);
     }
@@ -41,21 +84,32 @@ const UserForm = () => {
 
   return (
     <Form layout="vertical" form={form} onFinish={onFinish}>
-      <Form.Item name="name" label="Nombre" rules={userValidationRules.name}>
-        <Input />
-      </Form.Item>
       <Form.Item name="email" label="Correo" rules={userValidationRules.email}>
         <Input />
       </Form.Item>
-      {!isEdit && (
-        <Form.Item name="password" label="Contraseña" rules={userValidationRules.password}>
-          <Input.Password />
+
+      <Form.Item name="password" label={isEdit ? 'Contraseña (opcional)' : 'Contraseña'} rules={Array.isArray(passwordRules) ? passwordRules : []} hasFeedback>
+        <Input.Password />
+      </Form.Item>
+
+      <Form.Item label="Estado actual">
+        <Form.Item name="is_active" valuePropName="checked" noStyle>
+          <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
         </Form.Item>
-      )}
+        <span style={{ marginLeft: 10 }}>
+          {form.getFieldValue('is_active') ? 'Activo' : 'Inactivo'}
+        </span>
+      </Form.Item>
+
       <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading}>
-          {isEdit ? 'Actualizar' : 'Crear'}
-        </Button>
+        <Space>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            {isEdit ? 'Actualizar' : 'Crear'}
+          </Button>
+          <Button onClick={() => navigate('/users')} disabled={loading}>
+            Cancelar
+          </Button>
+        </Space>
       </Form.Item>
     </Form>
   );

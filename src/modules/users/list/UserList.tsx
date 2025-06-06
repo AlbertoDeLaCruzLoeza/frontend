@@ -116,37 +116,49 @@ const UserList = () => {
       },
     },
     {
-      title: 'Acciones',
-      key: 'acciones',
-      render: (_: any, record: any) => {
-        const notActivated =
-          record.activation_token && !record.activated_at && !record.deleted_at;
-        const deleted = !!record.deleted_at;
+  title: 'Acciones',
+  key: 'acciones',
+  render: (_: any, record: any) => {
+    const notActivated =
+      record.activation_token && !record.activated_at && !record.deleted_at;
+    const deleted = !!record.deleted_at;
 
-        return (
-          <Space>
-            <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
-              Editar
-            </Button>
+    // Si está pendiente de activación, solo mostrar eliminar
+    if (notActivated) {
+      return (
+        <Popconfirm
+          title="¿Seguro que deseas eliminar?"
+          onConfirm={() => handleDelete(record.user_id)}
+        >
+          <Button danger>Eliminar</Button>
+        </Popconfirm>
+      );
+    }
 
-            {!deleted && (
-              <Popconfirm
-                title="¿Seguro que deseas eliminar?"
-                onConfirm={() => handleDelete(record.user_id)}
-              >
-                <Button danger>Eliminar</Button>
-              </Popconfirm>
-            )}
+    return (
+      <Space>
+        <Button onClick={() => navigate(`/users/edit/${record.user_id}`)}>
+          Editar
+        </Button>
 
-            {deleted && (
-              <Button type="default" onClick={() => handleReactivate(record.user_id)}>
-                Reactivar
-              </Button>
-            )}
-          </Space>
-        );
-      },
-    },
+        {!deleted && (
+          <Popconfirm
+            title="¿Seguro que deseas eliminar?"
+            onConfirm={() => handleDelete(record.user_id)}
+          >
+            <Button danger>Eliminar</Button>
+          </Popconfirm>
+        )}
+
+        {deleted && (
+          <Button type="default" onClick={() => handleReactivate(record.user_id)}>
+            Reactivar
+          </Button>
+        )}
+      </Space>
+    );
+  },
+},
   ];
 
   return (

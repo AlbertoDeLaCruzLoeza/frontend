@@ -19,7 +19,6 @@ const ActionLogList = () => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      // Construimos parámetros para el filtro
       const params: any = {};
       if (userId) params.userId = Number(userId);
       if (actionType) params.actionType = actionType;
@@ -47,9 +46,22 @@ const ActionLogList = () => {
     }
   };
 
+  const clearFilters = () => {
+    setUserId('');
+    setActionType('');
+    setTableAffected('');
+    setDateRange(null);
+};
+
+
   useEffect(() => {
+  const noFilters =
+    !userId && !actionType && !tableAffected && (!dateRange || (!dateRange[0] && !dateRange[1]));
+  if (noFilters) {
     fetchLogs();
-  }, []);
+  }
+}, [userId, actionType, tableAffected, dateRange]);
+
 
   const columns = [
     { title: 'Usuario ID', dataIndex: 'userId' },
@@ -60,11 +72,11 @@ const ActionLogList = () => {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }}>
+      <Space style={{ marginBottom: 16 }} wrap>
         <Input
           placeholder="Usuario ID"
           value={userId}
-          onChange={(e) => setUserId(e.target.value.replace(/\D/g, ''))} // Solo números
+          onChange={(e) => setUserId(e.target.value.replace(/\D/g, ''))}
           style={{ width: 120 }}
           allowClear
         />
@@ -89,6 +101,9 @@ const ActionLogList = () => {
         />
         <Button type="primary" onClick={fetchLogs}>
           Buscar
+        </Button>
+        <Button onClick={clearFilters}>
+          Limpiar filtros
         </Button>
       </Space>
       <Table columns={columns} dataSource={data} loading={loading} />

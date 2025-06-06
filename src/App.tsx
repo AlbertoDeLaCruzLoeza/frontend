@@ -12,15 +12,19 @@ const App = () => {
 
   return (
     <Routes>
+      {/* Rutas públicas */}
       <Route path="/login" element={<LoginForm />} />
       <Route path="/registro" element={<RegisterForm />} />
       <Route path="/auth/confirm-email" element={<EmailConfirmRedirect />} />
       <Route path="/activation-success" element={<ActivationSuccess />} />
       <Route path="/activation-error" element={<ActivationError />} />
-      <Route
-        path="/*"
-        element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}
-      />
+
+      {/* Ruta protegida con layout y rutas internas */}
+      {isAuthenticated ? (
+        <Route path="/*" element={<MainLayout />} />
+      ) : (
+        <Route path="/*" element={<Navigate to="/home" replace />} />
+      )}
     </Routes>
   );
 };

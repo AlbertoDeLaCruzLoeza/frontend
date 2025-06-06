@@ -1,7 +1,12 @@
-// src/pages/auth/EmailConfirmRedirect.tsx
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Spin, Typography } from 'antd';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Button, Card, Typography } from 'antd';
+import {
+  CheckCircleTwoTone,
+  InfoCircleTwoTone,
+  CloseCircleTwoTone,
+  LoadingOutlined,
+} from '@ant-design/icons';
 import axios from 'axios';
 
 const { Title, Text } = Typography;
@@ -9,9 +14,9 @@ const { Title, Text } = Typography;
 const EmailConfirmRedirect = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'loading' | 'confirmed' | 'alreadyConfirmed' | 'error'>('loading');
+  const navigate = useNavigate();
 
-  // Ref para evitar que el efecto se ejecute más de una vez
+  const [status, setStatus] = useState<'loading' | 'confirmed' | 'alreadyConfirmed' | 'error'>('loading');
   const didRun = useRef(false);
 
   useEffect(() => {
@@ -30,8 +35,6 @@ const EmailConfirmRedirect = () => {
           validateStatus: () => true,
         });
 
-        console.log('Respuesta backend confirm-email:', res.status, res.data);
-
         const statusFromBackend = res.data?.data?.records?.status;
 
         if (statusFromBackend === 'confirmed') setStatus('confirmed');
@@ -46,33 +49,73 @@ const EmailConfirmRedirect = () => {
     confirmEmail();
   }, [token]);
 
+  const renderIcon = () => {
+    switch (status) {
+      case 'loading':
+        return <LoadingOutlined style={{ fontSize: 64, color: '#1890ff' }} spin />;
+      case 'confirmed':
+        return <CheckCircleTwoTone twoToneColor="#52c41a" style={{ fontSize: 64 }} />;
+      case 'alreadyConfirmed':
+        return <InfoCircleTwoTone twoToneColor="#faad14" style={{ fontSize: 64 }} />;
+      case 'error':
+        return <CloseCircleTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 64 }} />;
+    }
+  };
+
+  const renderTitle = () => {
+    switch (status) {
+      case 'loading':
+        return 'Confirmando tu cuenta...';
+      case 'confirmed':
+        return '¡Cuenta activada con éxito!';
+      case 'alreadyConfirmed':
+        return 'Tu cuenta ya había sido activada';
+      case 'error':
+        return 'Error al activar la cuenta';
+    }
+  };
+
+  const renderMessage = () => {
+    switch (status) {
+      case 'loading':
+        return 'Por favor espera un momento.';
+      case 'confirmed':
+        return 'Ya puedes iniciar sesión con tu correo electrónico.';
+      case 'alreadyConfirmed':
+        return 'Puedes iniciar sesión normalmente.';
+      case 'error':
+        return 'El enlace es inválido, ha expirado o ya fue usado. Si crees que esto es un error, contacta a soporte@example.com';
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
-      {status === 'loading' && (
-        <>
-          <Spin size="large" />
-          <Title level={4} style={{ marginTop: 20 }}>Confirmando tu cuenta...</Title>
-          <Text>Espera un momento mientras procesamos la activación.</Text>
-        </>
-      )}
-      {status === 'confirmed' && (
-        <>
-          <Title level={3}>🎉 ¡Cuenta activada con éxito!</Title>
-          <Text>Ya puedes iniciar sesión con tu correo electrónico.</Text>
-        </>
-      )}
-      {status === 'alreadyConfirmed' && (
-        <>
-          <Title level={3}>🔓 Cuenta ya activada</Title>
-          <Text>Tu cuenta ya había sido activada previamente.</Text>
-        </>
-      )}
-      {status === 'error' && (
-        <>
-          <Title level={3} type="danger">❌ Error en la activación</Title>
-          <Text>El enlace no es válido, ha expirado o ya fue usado.</Text>
-        </>
-      )}
+    <div style={{
+      backgroundColor: '#ffffff',
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '24px',
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: 400,
+          padding: 32,
+          textAlign: 'center',
+          borderRadius: 16,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <div style={{ marginBottom: 24 }}>{renderIcon()}</div>
+        <Title level={3} style={{ marginBottom: 12 }}>{renderTitle()}</Title>
+        <Text style={{ display: 'block', marginBottom: 24 }}>{renderMessage()}</Text>
+        {(status === 'confirmed' || status === 'alreadyConfirmed') && (
+          <Button type="primary" block onClick={() => navigate('/login')}>
+            Ir al login
+          </Button>
+        )}
+      </Card>
     </div>
   );
 };
