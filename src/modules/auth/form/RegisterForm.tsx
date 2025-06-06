@@ -3,36 +3,50 @@ import { Button, Card, Form, Input, message } from 'antd';
 import { register } from '../../../api/authService';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 
-const siteKey = '6LfVDEwrAAAAAODAcPsp9Ypk_SETfk-PK1HgR0bE'; // ← reemplaza con tu clave del sitio de reCAPTCHA
+const siteKey = '6LckoVIrAAAAAAmv_2Z52o4hK0nMDxFSpqeIBZoO'; // ← reemplaza con tu clave real
 
 const RegisterForm = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { email: string; password: string }) => {
     if (!recaptchaToken) {
       message.warning('Por favor, completa el reCAPTCHA');
       return;
     }
 
+    setLoading(true);
     try {
-      await register({ ...values, recaptchaToken });
-      message.success('Registro exitoso');
+      console.log('Valores enviados al backend:', { ...values, recaptchaToken });
+      const response = await register({ ...values, recaptchaToken });
+      message.success(response.message || 'Registro exitoso');
       navigate('/login');
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 400) {
-          const errorMessage = err.response.data?.message || 'El correo ya está registrado';
-          message.error(errorMessage);
+        const status = err.response?.status;
+        const backendMessage = err.response?.data?.message;
+
+        if (status === 409) {
+          message.error('Este correo ya está registrado');
+        } else if (status === 400 || status === 401) {
+          message.error(backendMessage || 'Datos inválidos');
         } else {
           message.error('Error del servidor. Inténtalo más tarde.');
         }
       } else {
         message.error('Ocurrió un error inesperado.');
       }
+
+      // Reiniciar el reCAPTCHA en caso de error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,14 +87,21 @@ const RegisterForm = () => {
           </Form.Item>
 
           <Form.Item>
-            <ReCAPTCHA sitekey={siteKey} onChange={setRecaptchaToken} />
+            <ReCAPTCHA
+            sitekey={siteKey}
+            onChange={(token) => {
+              console.log('reCAPTCHA token generado:', token);
+              setRecaptchaToken(token);
+            }}
+          />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={loading}>
               Registrarse
             </Button>
           </Form.Item>
+
           <Form.Item style={{ marginBottom: 0 }}>
             ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
           </Form.Item>

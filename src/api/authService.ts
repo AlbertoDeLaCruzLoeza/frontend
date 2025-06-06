@@ -32,11 +32,16 @@ export const login = async (data: LoginData) => {
 };
 
 
-
-// POST: /auth/register
-export const register = (data: RegisterData) => {
+// authService.ts
+export const register = async (data: {
+  email: string;
+  password: string;
+  recaptchaToken: string;
+}) => {
   return axios.post('/auth/register', data);
 };
+
+
 
 export const logout = async () => {
   const token = localStorage.getItem('token');

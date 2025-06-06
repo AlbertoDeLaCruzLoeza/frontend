@@ -40,6 +40,7 @@ import { logout } from '../api/authService';
 import { message } from 'antd';
 import axios from 'axios';
 
+
 const { Header, Content, Sider } = Layout;
 
 const breadcrumbNames: Record<string, string> = {
@@ -207,6 +208,7 @@ const MainLayout = () => {
               <Route path="/suppliers/edit/:id" element={<SupplierForm />} />
 
               <Route path="/action-logs" element={<ActionLogList />} />
+
             </Routes>
             <Outlet />
           </div>
