@@ -166,7 +166,6 @@ const UserList = () => {
           <Select placeholder="Estado" allowClear style={{ width: 150 }}>
             <Select.Option value={true}>Activo</Select.Option>
             <Select.Option value={false}>Inactivo</Select.Option>
-            <Select.Option value="pending">Pendiente de activación</Select.Option>
           </Select>
         </Form.Item>
 
