@@ -32,7 +32,7 @@ const RegisterForm = () => {
         const backendMessage = err.response?.data?.message;
 
         if (status === 409) {
-          message.error('Este correo ya está registrado');
+          message.error('El email ya está registrado');
         } else if (status === 400 || status === 401) {
           message.error(backendMessage || 'Datos inválidos');
         } else {
