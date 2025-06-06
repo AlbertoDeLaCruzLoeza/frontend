@@ -49,7 +49,7 @@ const LoginForm = () => {
         ) {
           message.error('El reCAPTCHA expiró o no es válido. Intenta de nuevo.');
         } else {
-          message.error('Error del servidor. Intenta nuevamente.');
+          message.error('Usuario no registrado por favor ingrese sus datos correctamente');
         }
       } else {
         message.error('Ocurrió un error inesperado.');

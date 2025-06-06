@@ -87,7 +87,7 @@ const ProductList = () => {
       setProducts(uniqueProducts);
 
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Error al cargar productos';
+      const msg = error.response?.data?.message || 'La fecha final no puede ser futura';
       message.error(msg);
     } finally {
       setLoading(false);

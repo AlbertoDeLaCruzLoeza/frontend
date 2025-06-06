@@ -33,7 +33,7 @@ const UserForm = () => {
       }
       navigate('/users');
     } catch {
-      message.error('Error al guardar');
+      message.error('Error al guardar, porfavor ingrese los datos de forma correcta');
     } finally {
       setLoading(false);
     }

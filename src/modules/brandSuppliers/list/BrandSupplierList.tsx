@@ -81,7 +81,7 @@ const BrandSupplierList = () => {
 
       setData(mappedRecords);
     } catch (error) {
-      message.error('Error al cargar los datos');
+      message.error('La fecha final no puede ser futura');
     } finally {
       setLoading(false);
     }

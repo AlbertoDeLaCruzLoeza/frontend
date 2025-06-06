@@ -125,7 +125,7 @@ const ProductForm = () => {
         <Form.Item
           label="Código"
           name="code"
-          rules={[{ required: true, message: 'El código es obligatorio' }]}
+          rules={[{ required: true, message: 'El código es obligatorio, por favor ingreselo de forma correcta (MM-209 o 100)' }]}
         >
           <Input />
         </Form.Item>
@@ -141,7 +141,7 @@ const ProductForm = () => {
         <Form.Item
           label="Descripción"
           name="description"
-          rules={[{ required: true, message: 'La descripción es obligatoria' }]}
+          rules={[{ required: true, message: 'La descripción es obligatoria, porfavor ingresela de forma correcta' }]}
         >
           <Input.TextArea rows={3} />
         </Form.Item>

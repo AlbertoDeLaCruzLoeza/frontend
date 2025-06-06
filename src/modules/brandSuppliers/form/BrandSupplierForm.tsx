@@ -140,7 +140,7 @@ const BrandSupplierForm = () => {
         <Form.Item
           label="Nombre del proveedor"
           name="name"
-          rules={[{ required: true, message: 'El nombre es obligatorio' }]}
+          rules={[{ required: true, message: 'El nombre es obligatorio, por favor ingreselo correctamente' }]}
         >
           <Input />
         </Form.Item>
@@ -148,7 +148,7 @@ const BrandSupplierForm = () => {
         <Form.Item
           label="Persona de contacto"
           name="contactPerson"
-          rules={[{ required: true, message: 'Este campo es obligatorio' }]}
+          rules={[{ required: true, message: 'Este campo es obligatorio, por favor ingreselo correctamente (Ejemplo: Jualian Caceres)' }]}
         >
           <Input />
         </Form.Item>
@@ -157,7 +157,7 @@ const BrandSupplierForm = () => {
           label="Correo electrónico"
           name="email"
           rules={[
-            { required: true, message: 'El correo es obligatorio' },
+            { required: true, message: 'El correo es obligatorio, por favor ingreselo de forma correcta (Ejemplo: usuarioejemplo@gmail.com)' },
             { type: 'email', message: 'Correo inválido' },
           ]}
         >
@@ -167,7 +167,7 @@ const BrandSupplierForm = () => {
         <Form.Item
           label="Teléfono"
           name="phone"
-          rules={[{ required: true, message: 'El teléfono es obligatorio' }]}
+          rules={[{ required: true, message: 'El teléfono es obligatorio, por favor ingreselo correctamente' }]}
         >
           <Input />
         </Form.Item>
@@ -175,7 +175,7 @@ const BrandSupplierForm = () => {
         <Form.Item
           label="Dirección"
           name="address"
-          rules={[{ required: true, message: 'La dirección es obligatoria' }]}
+          rules={[{ required: true, message: 'La dirección es obligatoria, por favor ingresela de forma correcta' }]}
         >
           <Input />
         </Form.Item>

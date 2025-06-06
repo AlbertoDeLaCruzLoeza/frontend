@@ -41,7 +41,7 @@ const ActionLogList = () => {
 
       setData(processed);
     } catch (err) {
-      message.error('Error al cargar los registros');
+      message.error('La fecha de inicio no puede estar en el futuro');
     } finally {
       setLoading(false);
     }
