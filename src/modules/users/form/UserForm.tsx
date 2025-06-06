@@ -12,41 +12,31 @@ const UserForm = () => {
   const isEdit = !!id;
 
   useEffect(() => {
-  if (isEdit && id) {
-    getUserById(id)
-      .then(res => {
-        const records = res.data?.data?.records;
-        const userData = Array.isArray(records) ? records[0] : records;
+    if (isEdit && id) {
+      getUserById(id)
+        .then(res => {
+          const records = res.data?.data?.records;
+          const userData = Array.isArray(records) ? records[0] : records;
 
-        if (!userData) {
-          message.error('No se encontró el usuario');
-          return;
-        }
-
-        form.setFieldsValue({
-          email: userData.email,
-          is_active: userData.is_active === 'Sí',
-        });
-      })
-      .catch(err => {
-        console.error('Error al cargar el usuario', err);
-        message.error('Error al cargar los datos del usuario');
-      });
-  }
-}, [id]);
-
-
-  // Definimos reglas para la contraseña dependiendo si es edición o creación
-  const passwordRules = isEdit
-    ? [ // Opcional en edición, pero si hay valor debe cumplir las reglas
-        {
-          validator(_, value) {
-            if (!value) return Promise.resolve();
-            return userValidationRules.password[0].validator(_, value);
+          if (!userData) {
+            message.error('No se encontró el usuario');
+            return;
           }
-        }
-      ]
-    : userValidationRules.password; // Obligatorio en creación
+
+          form.setFieldsValue({
+            email: userData.email,
+            is_active: userData.is_active === 'Sí',
+          });
+        })
+        .catch(err => {
+          console.error('Error al cargar el usuario', err);
+          message.error('Error al cargar los datos del usuario');
+        });
+    }
+  }, [id]);
+
+  // ✅ Se invoca correctamente para obtener reglas según si es edición o no
+  const passwordRules = userValidationRules.password(isEdit);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -57,7 +47,6 @@ const UserForm = () => {
     };
 
     if (isEdit) {
-      // Solo incluir password_hash si se modificó la contraseña
       if (values.password && values.password.trim() !== '') {
         payload.password_hash = values.password;
       }
@@ -88,7 +77,12 @@ const UserForm = () => {
         <Input />
       </Form.Item>
 
-      <Form.Item name="password" label={isEdit ? 'Contraseña (opcional)' : 'Contraseña'} rules={Array.isArray(passwordRules) ? passwordRules : []} hasFeedback>
+      <Form.Item
+        name="password"
+        label={isEdit ? 'Contraseña (opcional)' : 'Contraseña'}
+        rules={passwordRules}
+        hasFeedback
+      >
         <Input.Password />
       </Form.Item>
 
