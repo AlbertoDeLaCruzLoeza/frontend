@@ -13,7 +13,7 @@ export const userValidationRules = {
       if (!value) {
         return isEdit
           ? Promise.resolve() // En edición puede estar vacío
-          : Promise.reject('La contraseña es obligatoria');
+          : Promise.reject('Especificaciones para hacer valida la contraseña: debe contener al menos 8 caracteres, 1 letra mayuscula, 1 letra minuscula, 1 numero y 1 caracter especial (%$&!)');
       }
 
       if (value.length < 8) {
@@ -46,7 +46,7 @@ export const userValidationRules = {
           },
         ]
       : [
-          { required: true, message: 'La contraseña es obligatoria' },
+          { required: true, message: 'La contraseña es obligatoria: ' },
           {
             validator: passwordValidator,
           },
