@@ -8,6 +8,9 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import axios from 'axios';
+import { getToken } from 'firebase/messaging';
+import { messaging } from '../../../firebase';
+import { NotificationCenter } from '@novu/notification-center';
 
 const { Title, Text } = Typography;
 
@@ -17,6 +20,8 @@ const EmailConfirmRedirect = () => {
   const navigate = useNavigate();
 
   const [status, setStatus] = useState<'loading' | 'confirmed' | 'alreadyConfirmed' | 'error'>('loading');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showNovu, setShowNovu] = useState(false);
   const didRun = useRef(false);
 
   useEffect(() => {
@@ -36,10 +41,16 @@ const EmailConfirmRedirect = () => {
         });
 
         const statusFromBackend = res.data?.data?.records?.status;
+        const userIdFromBackend = res.data?.data?.records?.user_id;
 
-        if (statusFromBackend === 'confirmed') setStatus('confirmed');
-        else if (statusFromBackend === 'alreadyConfirmed') setStatus('alreadyConfirmed');
-        else setStatus('error');
+        if (statusFromBackend === 'confirmed') {
+          setStatus('confirmed');
+          if (userIdFromBackend) setUserId(userIdFromBackend.toString());
+        } else if (statusFromBackend === 'alreadyConfirmed') {
+          setStatus('alreadyConfirmed');
+        } else {
+          setStatus('error');
+        }
       } catch (err) {
         console.error('Error al confirmar el correo:', err);
         setStatus('error');
@@ -48,6 +59,35 @@ const EmailConfirmRedirect = () => {
 
     confirmEmail();
   }, [token]);
+
+  useEffect(() => {
+    const registrarDispositivoConNovu = async () => {
+      if (status !== 'confirmed' || !userId) return;
+
+      try {
+        // Obtener token FCM para push
+        const fcmToken = await getToken(messaging, {
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        });
+
+        if (!fcmToken) {
+          console.warn('No se pudo obtener el token FCM');
+          return;
+        }
+
+        // Mostrar el widget de Novu y registrarse
+        setShowNovu(true);
+
+        // Aquí podrías hacer llamada a tu backend para registrar el fcmToken junto con userId
+        // para que Novu pueda enviar notificaciones push luego (opcional).
+
+      } catch (error) {
+        console.error('Error obteniendo token push:', error);
+      }
+    };
+
+    registrarDispositivoConNovu();
+  }, [status, userId]);
 
   const renderIcon = () => {
     switch (status) {
@@ -89,14 +129,16 @@ const EmailConfirmRedirect = () => {
   };
 
   return (
-    <div style={{
-      backgroundColor: '#ffffff',
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '24px',
-    }}>
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '24px',
+      }}
+    >
       <Card
         style={{
           width: '100%',
@@ -108,12 +150,23 @@ const EmailConfirmRedirect = () => {
         }}
       >
         <div style={{ marginBottom: 24 }}>{renderIcon()}</div>
-        <Title level={3} style={{ marginBottom: 12 }}>{renderTitle()}</Title>
+        <Title level={3} style={{ marginBottom: 12 }}>
+          {renderTitle()}
+        </Title>
         <Text style={{ display: 'block', marginBottom: 24 }}>{renderMessage()}</Text>
         {(status === 'confirmed' || status === 'alreadyConfirmed') && (
           <Button type="primary" block onClick={() => navigate('/login')}>
             Ir al login
           </Button>
+        )}
+
+        {/* Aquí se monta el widget de Novu para notificaciones */}
+        {showNovu && userId && (
+          <NotificationCenter
+            subscriberId={userId}
+            applicationIdentifier={import.meta.env.VITE_PUBLIC_NOVU_APP_ID}
+            // Opcional: puedes personalizar tema, posición, etc.
+          />
         )}
       </Card>
     </div>

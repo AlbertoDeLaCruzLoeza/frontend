@@ -1,8 +1,11 @@
-// Enhanced Home Page Styling to match premium skincare aesthetic
+import { useEffect } from "react";
 import { Card, CardContent, Typography, Box, AppBar, Toolbar, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Package, Tag, Truck, Users, Activity } from "lucide-react";
 import { motion } from "framer-motion";
+import { getToken } from "firebase/messaging";
+import { messaging } from "../../firebase";
+import axios from "axios";
 import "../../index.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/600.css";
@@ -19,6 +22,55 @@ const sections = [
 ];
 
 const Home = () => {
+  useEffect(() => {
+    const registerFcmToken = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          console.warn("El usuario no aceptó las notificaciones push");
+          return;
+        }
+
+        const fcmToken = await getToken(messaging, {
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        });
+
+        if (!fcmToken) {
+          console.warn("No se pudo obtener el token FCM");
+          return;
+        }
+
+        console.log("FCM Token obtenido en Home:", fcmToken);
+
+        const userId = localStorage.getItem("userId");
+        const authToken = localStorage.getItem("token");
+
+        console.log('user id obtenido:', userId);
+
+        if (!userId || !authToken) {
+          console.warn("No hay userId o token disponible");
+          return;
+        }
+
+        await axios.post(
+          "https://back-front-y42m.onrender.com/auth/fcm",
+          { userId, fcmToken },
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
+        console.log("Token FCM enviado al backend y registrado en Novu");
+      } catch (error) {
+        console.error("Error al registrar token FCM:", error);
+      }
+    };
+
+    registerFcmToken();
+  }, []);
+
   return (
     <>
       <AppBar
@@ -95,11 +147,18 @@ const Home = () => {
           {sections.map((section, index) => (
             <motion.div
               key={section.name}
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(0,0,0,0.08)" }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+              }}
               whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
+              transition={{
+                delay: index * 0.1,
+                duration: 0.5,
+                ease: "easeOut",
+              }}
             >
               <Link to={section.to} style={{ textDecoration: "none" }}>
                 <Card
@@ -120,7 +179,11 @@ const Home = () => {
                   <Box sx={{ color: "#111", mb: 2 }}>{section.icon}</Box>
                   <Typography
                     variant="h6"
-                    sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 600, color: "#333" }}
+                    sx={{
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                      color: "#333",
+                    }}
                   >
                     {section.name}
                   </Typography>

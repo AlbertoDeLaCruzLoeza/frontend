@@ -1,10 +1,12 @@
-// src/modules/auth/form/LoginForm.tsx
 import { useRef, useState } from 'react';
 import { Button, Card, Form, Input, message } from 'antd';
 import { login } from '../../../api/authService';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReCAPTCHA from 'react-google-recaptcha';
+
+import { getToken } from 'firebase/messaging';
+import { messaging } from '../../../firebase';
 
 const siteKey = '6LckoVIrAAAAAAmv_2Z52o4hK0nMDxFSpqeIBZoO';
 
@@ -17,27 +19,46 @@ const LoginForm = () => {
   const onFinish = async (values: any) => {
     if (!recaptchaToken) {
       message.warning('Por favor, completa el reCAPTCHA');
-      console.warn('No se ha completado el reCAPTCHA');
       return;
     }
 
     setLoading(true);
     try {
-      console.log('Datos del formulario:', values);
-      console.log('Token reCAPTCHA:', recaptchaToken);
+      // 🔔 Obtener permiso y token FCM antes del login
+      let fcmToken: string | null = null;
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        fcmToken = await getToken(messaging, {
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        });
 
-    const res: any = await login({ ...values, recaptchaToken });
-    const token = res.data.data.records.login_token;      
-    console.log('Respuesta del login:', res);
-
-        if (token) {
-          localStorage.setItem('token', token);
-          message.success('Inicio de sesión exitoso');
-          navigate('/home');
+        if (fcmToken) {
+          console.log('Token FCM obtenido:', fcmToken);
         } else {
-          console.error('No se recibió el token de autenticación');
+          console.warn('No se pudo obtener el token FCM');
         }
+      } else {
+        console.warn('El usuario rechazó los permisos de notificación');
+      }
 
+      const loginPayload = {
+        ...values,
+        recaptchaToken,
+        fcmToken, 
+      };
+
+      const res: any = await login(loginPayload);
+      const token = res.data?.data?.records?.login_token;
+      const userId = res.data?.data?.records?.user_id;
+
+      if (userId) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId.toString());
+        message.success('Inicio de sesión exitoso');
+        navigate('/home');
+      } else {
+        console.error('No se recibió el token de autenticación o userId');
+      }
     } catch (err: any) {
       console.error('Error en el login:', err);
       if (axios.isAxiosError(err)) {
@@ -49,7 +70,7 @@ const LoginForm = () => {
         ) {
           message.error('El reCAPTCHA expiró o no es válido. Intenta de nuevo.');
         } else {
-          message.error('Usuario no registrado por favor ingrese sus datos correctamente');
+          message.error('Usuario no registrado. Verifica tus datos.');
         }
       } else {
         message.error('Ocurrió un error inesperado.');
