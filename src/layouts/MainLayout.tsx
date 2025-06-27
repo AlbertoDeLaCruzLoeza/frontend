@@ -1,4 +1,3 @@
-// src/layouts/MainLayout.tsx
 import { Layout, Menu, Breadcrumb } from 'antd';
 import {
   UserOutlined,
@@ -11,8 +10,6 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet, Link, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
-
-// Componentes de cada módulo
 import Home from '../modules/home/Home';
 import UserList from '../modules/users/list/UserList';
 import UserForm from '../modules/users/form/UserForm';
@@ -39,7 +36,7 @@ import ActionLogList from '../modules/actionLogs/list/ActionLogList';
 import { logout } from '../api/authService';
 import { message } from 'antd';
 import axios from 'axios';
-
+import NovuInApp from '../components/NovuProviderWrapper'; // 🟢 Notificaciones in-app
 
 const { Header, Content, Sider } = Layout;
 
@@ -52,22 +49,10 @@ const breadcrumbNames: Record<string, string> = {
 };
 
 const breadcrumbActions: Record<string, Record<string, string>> = {
-  users: {
-    form: 'Nuevo Usuario',
-    edit: 'Editar Usuario',
-  },
-  products: {
-    form: 'Nuevo Producto',
-    edit: 'Editar Producto',
-  },
-  brands: {
-    form: 'Nueva Marca',
-    edit: 'Editar Marca',
-  },
-  'brand-suppliers': {
-    form: 'Nuevo Relacion Marca/Proveedor',
-    edit: 'Editar Relacion Marca/Proveedor',
-  },
+  users: { form: 'Nuevo Usuario', edit: 'Editar Usuario' },
+  products: { form: 'Nuevo Producto', edit: 'Editar Producto' },
+  brands: { form: 'Nueva Marca', edit: 'Editar Marca' },
+  'brand-suppliers': { form: 'Nuevo Relacion Marca/Proveedor', edit: 'Editar Relacion Marca/Proveedor' },
 };
 
 const MainLayout = () => {
@@ -78,38 +63,26 @@ const MainLayout = () => {
   useEffect(() => {
     const main = pathSnippets[0];
     const action = pathSnippets[1];
-
-    const title =
-      breadcrumbActions[main]?.[action] ||
-      breadcrumbNames[main] ||
-      'Inicio';
-
+    const title = breadcrumbActions[main]?.[action] || breadcrumbNames[main] || 'Inicio';
     document.title = `${title} | TiendApi`;
   }, [location]);
 
   const handleLogout = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    console.log('[Logout] Token recuperado:', token);
-
-    await logout(); // llama al servicio que manda el token
-
-    message.success('Sesión cerrada correctamente');
-    localStorage.removeItem('token');
-    navigate('/login');
-  } catch (error) {
-    console.error('[Logout] Error:', error);
-
-    if (axios.isAxiosError(error)) {
-      console.error('[Logout] Error response:', error.response?.data);
-      message.error(
-        error.response?.data?.message || 'Error al cerrar sesión'
-      );
-    } else {
-      message.error('Error inesperado al cerrar sesión');
+    try {
+      const token = localStorage.getItem('token');
+      await logout();
+      message.success('Sesión cerrada correctamente');
+      localStorage.removeItem('token');
+      navigate('/login');
+    } catch (error) {
+      console.error('[Logout] Error:', error);
+      if (axios.isAxiosError(error)) {
+        message.error(error.response?.data?.message || 'Error al cerrar sesión');
+      } else {
+        message.error('Error inesperado al cerrar sesión');
+      }
     }
-  }
-};
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', width: '100vw' }}>
@@ -127,8 +100,22 @@ const MainLayout = () => {
       </Sider>
 
       <Layout style={{ width: '100%' }}>
-        <Header style={{ background: '#fff', paddingLeft: 24, fontWeight: 'bold' }}>
+        <Header
+          style={{
+            background: '#fff',
+            paddingLeft: 24,
+            fontWeight: 'bold',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           {breadcrumbNames[pathSnippets[0]] || 'Inicio'}
+
+          {/* 🔔 Campana de Novu */}
+          <div style={{ marginRight: 24 }}>
+            <NovuInApp />
+          </div>
         </Header>
 
         <Content style={{ padding: '16px' }}>
@@ -137,80 +124,56 @@ const MainLayout = () => {
             {pathSnippets.map((part, index) => {
               const key = pathSnippets[index];
               const parent = pathSnippets[0];
-
               if ((key === 'form' || key === 'edit') && breadcrumbActions[parent]) {
-                return (
-                  <Breadcrumb.Item key={index}>
-                    {breadcrumbActions[parent][key] || key}
-                  </Breadcrumb.Item>
-                );
+                return <Breadcrumb.Item key={index}>{breadcrumbActions[parent][key] || key}</Breadcrumb.Item>;
               }
-
-              return (
-                <Breadcrumb.Item key={index}>
-                  {breadcrumbNames[key] || key}
-                </Breadcrumb.Item>
-              );
+              return <Breadcrumb.Item key={index}>{breadcrumbNames[key] || key}</Breadcrumb.Item>;
             })}
           </Breadcrumb>
 
-          <div 
-          className='invisible-scrollbar'
-          style={{ padding: 24,
-                        background: '#fff',
-                        height: 'calc(100vh - 112px)', // Ajuste para Header (64px) + Breadcrumb (48px)
-                        overflowY: 'auto',
-                        overflowX: 'auto',
-                        minWidth: 0, }}
-          >
+          <div className="invisible-scrollbar" style={{
+            padding: 24,
+            background: '#fff',
+            height: 'calc(100vh - 112px)',
+            overflowY: 'auto',
+            overflowX: 'auto',
+            minWidth: 0,
+          }}>
             <Routes>
               <Route path="/home" element={<Home />} />
-
               <Route path="/users" element={<UserList />} />
               <Route path="/users/form" element={<UserForm />} />
               <Route path="/users/edit/:id" element={<UserForm />} />
-
               <Route path="/products" element={<ProductList />} />
               <Route path="/products/form" element={<ProductForm />} />
               <Route path="/products/edit/:id" element={<ProductForm />} />
-
               <Route path="/brands" element={<BrandList />} />
               <Route path="/brands/form" element={<BrandForm />} />
               <Route path="/brands/edit/:id" element={<BrandForm />} />
-
               <Route path="/brand-suppliers" element={<BrandSupplierList />} />
               <Route path="/brand-suppliers/form" element={<BrandSupplierForm />} />
               <Route path="/brand-suppliers/edit/:id" element={<BrandSupplierForm />} />
-
               <Route path="/categories" element={<CategoryList />} />
               <Route path="/categories/form" element={<CategoryForm />} />
               <Route path="/categories/edit/:id" element={<CategoryForm />} />
-
               <Route path="/inventory" element={<InventoryList />} />
               <Route path="/inventory/form" element={<InventoryForm />} />
               <Route path="/inventory/edit/:id" element={<InventoryForm />} />
-
               <Route path="/inventory-history" element={<InventoryHistoryList />} />
               <Route path="/inventory-history/form" element={<InventoryHistoryForm />} />
               <Route path="/inventory-history/edit/:id" element={<InventoryHistoryForm />} />
-
               <Route path="/inventory-movement/form" element={<InventoryMovementForm />} />
               <Route path="/inventory-movement/edit/:id" element={<InventoryMovementForm />} />
-
               <Route path="/permissions" element={<PermissionList />} />
               <Route path="/permissions/form" element={<PermissionForm />} />
               <Route path="/permissions/edit/:id" element={<PermissionForm />} />
-
               <Route path="/roles" element={<RoleList />} />
               <Route path="/roles/form" element={<RoleForm />} />
               <Route path="/roles/edit/:id" element={<RoleForm />} />
-
               <Route path="/suppliers" element={<SupplierList />} />
               <Route path="/suppliers/form" element={<SupplierForm />} />
               <Route path="/suppliers/edit/:id" element={<SupplierForm />} />
-
               <Route path="/action-logs" element={<ActionLogList />} />
-
             </Routes>
             <Outlet />
           </div>

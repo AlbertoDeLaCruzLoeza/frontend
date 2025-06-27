@@ -7,25 +7,37 @@ import EmailConfirmRedirect from './modules/auth/form/EmailConfirmRedirect';
 import ActivationError from './modules/auth/form/activation-error';
 import ActivationSuccess from './modules/auth/form/activation-success';
 
+import {
+  NovuProvider,
+  PopoverNotificationCenter,
+  NotificationBell,
+} from '@novu/notification-center';
+
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('token');
+  const userEmail = localStorage.getItem('userEmail'); // Recuperar email del login
 
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route path="/login" element={<LoginForm />} />
-      <Route path="/registro" element={<RegisterForm />} />
-      <Route path="/auth/confirm-email" element={<EmailConfirmRedirect />} />
-      <Route path="/activation-success" element={<ActivationSuccess />} />
-      <Route path="/activation-error" element={<ActivationError />} />
+    <NovuProvider
+      subscriberId={userEmail || 'anonimo'}
+      applicationIdentifier="635fa0d994282ddc7b10735c6f32b7d9"
+    >
+      <Routes>
+        {/* Rutas públicas */}
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/registro" element={<RegisterForm />} />
+        <Route path="/auth/confirm-email" element={<EmailConfirmRedirect />} />
+        <Route path="/activation-success" element={<ActivationSuccess />} />
+        <Route path="/activation-error" element={<ActivationError />} />
 
-      {/* Ruta protegida con layout y rutas internas */}
-      {isAuthenticated ? (
-        <Route path="/*" element={<MainLayout />} />
-      ) : (
-        <Route path="/*" element={<Navigate to="/home" replace />} />
-      )}
-    </Routes>
+        {/* Rutas protegidas */}
+        {isAuthenticated ? (
+          <Route path="/*" element={<MainLayout />} />
+        ) : (
+          <Route path="/*" element={<Navigate to="/home" replace />} />
+        )}
+      </Routes>
+    </NovuProvider>
   );
 };
 

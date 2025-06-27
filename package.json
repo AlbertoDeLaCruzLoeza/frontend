@@ -16,6 +16,7 @@
     "@fontsource/playfair-display": "^5.2.5",
     "@fontsource/poppins": "^5.2.6",
     "@mui/material": "^7.1.1",
+    "@novu/notification-center": "^2.0.0",
     "antd": "^5.25.2",
     "axios": "^1.9.0",
     "dayjs": "^1.11.13",
