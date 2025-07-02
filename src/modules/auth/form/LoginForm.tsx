@@ -54,6 +54,7 @@ const LoginForm = () => {
       if (userId) {
         localStorage.setItem('token', token);
         localStorage.setItem('userId', userId.toString());
+        localStorage.setItem('userEmail', values.email);
         message.success('Inicio de sesión exitoso');
         navigate('/home');
       } else {

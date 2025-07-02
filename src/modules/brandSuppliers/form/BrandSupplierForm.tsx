@@ -117,7 +117,7 @@ const BrandSupplierForm = () => {
       if (error?.response?.status === 409) {
         message.error('El email ya está registrado');
       } else {
-        message.error('Error al guardar el proveedor');
+        message.error('Error al guardar el proveedor, ingrese lo datos correctamente y asegurese que no esten repetidos%El telefono ');
       }
     } finally {
       setLoading(false);
@@ -167,7 +167,7 @@ const BrandSupplierForm = () => {
         <Form.Item
           label="Teléfono"
           name="phone"
-          rules={[{ required: true, message: 'El teléfono es obligatorio, por favor ingreselo correctamente' }]}
+          rules={[{ required: true, message: 'El teléfono es obligatorio, por favor ingreselo correctamente (Maximo 10 numeros)' }]}
         >
           <Input />
         </Form.Item>
