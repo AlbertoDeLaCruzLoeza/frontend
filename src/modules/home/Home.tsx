@@ -10,6 +10,7 @@ import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/600.css";
+import usePushpad from "../../hooks/usePushpad";
 
 const sections = [
   { name: "Productos", icon: <Package size={28} />, to: "/products" },
@@ -19,68 +20,9 @@ const sections = [
   { name: "Logs", icon: <Activity size={28} />, to: "/action-logs" },
 ];
 
+
 const Home = () => {
-//   useEffect(() => {
-//   const script = document.createElement("script");
-//   script.src = "https://cdn.pushpad.xyz/pushpad.js";
-//   script.async = true;
-//   document.body.appendChild(script);
-
-//   return () => {
-//     document.body.removeChild(script);
-//   };
-// }, []);
-
-
-  useEffect(() => {
-    const userId = localStorage.getItem("userId"); // O la clave que realmente uses
-    console.log('user id:', userId);
-
-    if (!userId) return;
-
-    axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/auth/pushpad-signature`, {
-        params: { userId },
-      })
-       .then(({ data }) => {
-        console.log("Respuesta completa:", data);
-        const { uid, uid_signature } = data.data?.records;
-
-        console.log("uid:", uid);
-        console.log("uid_signature:", uid_signature);
-
-        if (typeof (window as any).pushpad !== 'function') {
-          console.error("Pushpad aún no está disponible en window");
-          return;
-        }
-
-        (window as any).pushpad?.("init", {
-          uid,
-          uid_signature,
-          project: '8992',
-        })
-
-        (window as any).pushpad?.("subscribe", async (isSubscribed: boolean) => {
-          if (isSubscribed) {
-            console.log("Pushpad suscrito con UID:", uid);
-
-            try {
-              await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/pushpad-confirm`, {
-                userId,
-              });
-              console.log("UID confirmado correctamente en el backend.");
-            } catch (error) {
-              console.error("Error al confirmar suscripción en el backend:", error);
-            }
-          } else {
-            console.warn("El usuario rechazó la suscripción Pushpad");
-          }
-        });
-      })
-      .catch((err) => {
-        console.error("Error al obtener firma de Pushpad:", err);
-      });
-  }, []);
+  usePushpad();
 
   return (
     <>
@@ -92,8 +34,6 @@ const Home = () => {
           color: "#111",
           boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
           borderBottom: "1px solid #eee",
-          // Quitar zIndex negativo para que el AppBar sea visible
-          // zIndex: -1, 
         }}
       >
         <Toolbar sx={{ justifyContent: "center", py: 2 }}>
