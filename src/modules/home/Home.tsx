@@ -3,14 +3,13 @@ import { Card, Typography, Box, AppBar, Toolbar } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Package, Tag, Truck, Users, Activity } from "lucide-react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import "../../index.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/600.css";
-import usePushpad from "../../hooks/usePushpad";
+// import { initOneSignal } from "../../utils/initOneSignal"; // asegúrate de tener este archivo
 
 const sections = [
   { name: "Productos", icon: <Package size={28} />, to: "/products" },
@@ -20,9 +19,10 @@ const sections = [
   { name: "Logs", icon: <Activity size={28} />, to: "/action-logs" },
 ];
 
-
 const Home = () => {
-  usePushpad();
+  // useEffect(() => {
+  //   initOneSignal(); 
+  // }, []);
 
   return (
     <>

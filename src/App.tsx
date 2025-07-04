@@ -1,4 +1,5 @@
 // src/App.tsx
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginForm from './modules/auth/form/LoginForm';
 import RegisterForm from './modules/auth/form/RegisterForm';
@@ -6,16 +7,16 @@ import MainLayout from './layouts/MainLayout';
 import EmailConfirmRedirect from './modules/auth/form/EmailConfirmRedirect';
 import ActivationError from './modules/auth/form/activation-error';
 import ActivationSuccess from './modules/auth/form/activation-success';
-
-import {
-  NovuProvider,
-  PopoverNotificationCenter,
-  NotificationBell,
-} from '@novu/notification-center';
+import { NovuProvider } from '@novu/notification-center';
+import { initOneSignal } from './utils/initOneSignal';
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('token');
-  const userEmail = localStorage.getItem('userEmail'); // Recuperar email del login
+  const userEmail = localStorage.getItem('userEmail');
+
+  useEffect(() => {
+    initOneSignal();
+  }, []);
 
   return (
     <NovuProvider
@@ -23,11 +24,14 @@ const App = () => {
       applicationIdentifier="635fa0d994282ddc7b10735c6f32b7d9"
     >
       <Routes>
-
         <Route
           path="/"
           element={
-            isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
+            isAuthenticated ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 

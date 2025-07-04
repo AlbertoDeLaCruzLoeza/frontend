@@ -7,11 +7,11 @@ interface LoginData {
   recaptchaToken: string;
 }
 
-interface RegisterData {
-  email: string;
-  password: string;
-  recaptchaToken?: string; // opcional si no se usa en registro
-}
+// interface RegisterData {
+//   email: string;
+//   password: string;
+//   recaptchaToken?: string; // opcional si no se usa en registro
+// }
 
 export const login = async (data: LoginData) => {
   const response = await axios.post<{ login_token: string }>('/auth/login', data, {
