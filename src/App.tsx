@@ -23,6 +23,14 @@ const App = () => {
       applicationIdentifier="635fa0d994282ddc7b10735c6f32b7d9"
     >
       <Routes>
+
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
+          }
+        />
+
         {/* Rutas públicas */}
         <Route path="/login" element={<LoginForm />} />
         <Route path="/registro" element={<RegisterForm />} />
